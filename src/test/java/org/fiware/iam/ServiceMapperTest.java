@@ -202,7 +202,11 @@ class ServiceMapperTest {
 		assertEquals("my-credential", credentialVO.getType(),
 				"the credential should have the correct type");
 
-		List<TrustedParticipantsListVO> trustedParticipantsLists = credentialVO.getTrustedParticipantsLists();
+		List<TrustedParticipantsListVO> trustedParticipantsLists = credentialVO.getTrustedParticipantsLists()
+				.stream()
+				.filter(TrustedParticipantsListVO.class::isInstance)
+				.map(TrustedParticipantsListVO.class::cast)
+				.toList();
 		assertEquals(1, trustedParticipantsLists.size(),
 				"the trusted participants list should have 1 entry");
 		TrustedParticipantsListVO trustedParticipantsListVO = trustedParticipantsLists.get(0);

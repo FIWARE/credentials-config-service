@@ -1,5 +1,6 @@
 package org.fiware.iam;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fiware.iam.ccs.model.*;
 import org.fiware.iam.repository.*;
 import org.mapstruct.Mapper;
@@ -12,6 +13,8 @@ import java.util.stream.Collectors;
  */
 @Mapper(componentModel = "jsr330")
 public interface ServiceMapper {
+
+	static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	Service map(ServiceVO serviceVO);
 
@@ -41,6 +44,14 @@ public interface ServiceMapper {
 
 	ServiceVO map(Service service);
 
+	default EndpointEntry stringToEndpointEntry(String url) {
+		EndpointEntry entry = new EndpointEntry();
+		entry.setType(EndpointType.TRUSTED_PARTICIPANTS);
+		entry.setListType(ListType.EBSI);
+		entry.setEndpoint(url);
+		return entry;
+	}
+
 	default Credential map(CredentialVO credentialVO) {
 		if (credentialVO == null) {
 			return null;
@@ -49,7 +60,16 @@ public interface ServiceMapper {
 				.setCredentialType(credentialVO.getType());
 		List<EndpointEntry> trustedList = new ArrayList<>();
 		Optional.ofNullable(issuersToEntries(credentialVO.getTrustedIssuersLists())).ifPresent(trustedList::addAll);
-		Optional.ofNullable(participantsToEntries(credentialVO.getTrustedParticipantsLists())).ifPresent(trustedList::addAll);
+
+		credentialVO.getTrustedParticipantsLists()
+				.forEach(tpl -> {
+					if (tpl instanceof String tplS) {
+						trustedList.add(stringToEndpointEntry(tplS));
+					} else {
+						trustedList.add(participantToEntry(OBJECT_MAPPER.convertValue(tpl, TrustedParticipantsListVO.class)));
+					}
+				});
+
 		credential.setTrustedLists(trustedList);
 
 		if (credentialVO.getHolderVerification() != null) {
@@ -76,7 +96,7 @@ public interface ServiceMapper {
 		return new CredentialVO()
 				.type(credential.getCredentialType())
 				.trustedIssuersLists(entriesToIssuers(credential.getTrustedLists()))
-				.trustedParticipantsLists(entriesToParticipants(credential.getTrustedLists()))
+				.trustedParticipantsLists(entriesToParticipants(credential.getTrustedLists()).stream().map(Object.class::cast).toList())
 				.holderVerification(new HolderVerificationVO()
 						.enabled(credential.isVerifyHolder())
 						.claim(credential.getHolderClaim()));
@@ -96,6 +116,13 @@ public interface ServiceMapper {
 						.setListType(map(endpoint.getType()))
 						.setType(EndpointType.TRUSTED_PARTICIPANTS))
 				.toList();
+	}
+
+	default EndpointEntry participantToEntry(TrustedParticipantsListVO trustedParticipantsListVO) {
+		return new EndpointEntry()
+				.setEndpoint(trustedParticipantsListVO.getUrl())
+				.setListType(map(trustedParticipantsListVO.getType()))
+				.setType(EndpointType.TRUSTED_PARTICIPANTS);
 	}
 
 	/**

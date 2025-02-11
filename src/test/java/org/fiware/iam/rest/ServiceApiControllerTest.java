@@ -27,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @MicronautTest
 public class ServiceApiControllerTest implements ServiceApiTestSpec {
 
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
 	public final ServiceApiTestClient testClient;
 	public final ServiceRepository serviceRepository;
 
@@ -353,7 +355,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 
 		HttpResponse<ServiceVO> theServiceResponse = testClient.getService(theService.getId());
 		assertEquals(HttpStatus.OK, theServiceResponse.getStatus(), "The service should be responded with status OK.");
-		assertEquals(theService, theServiceResponse.body(), "The service should be responded with equal service object.");
+		assertEquals(OBJECT_MAPPER.writeValueAsString(theService), OBJECT_MAPPER.writeValueAsString(theServiceResponse.body()), "The service should be responded with equal service object.");
 	}
 
 	@ParameterizedTest
@@ -455,7 +457,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 	public void updateService200() throws Exception {
 		HttpResponse<ServiceVO> updatedService = testClient.updateService(theService.getId(), theService);
 		assertEquals(HttpStatus.OK, updatedService.status(), "The service should have been updated withst status OK.");
-		assertEquals(theService, updatedService.body(), "The service should have been updated with an equal object.");
+		assertEquals(OBJECT_MAPPER.writeValueAsString(theService), OBJECT_MAPPER.writeValueAsString(updatedService.body()), "The service should have been updated with an equal object.");
 	}
 
 	@ParameterizedTest
