@@ -25,5 +25,7 @@ public class EndpointEntry {
 
 	private EndpointType type;
 
+	private ListType listType = ListType.EBSI;
+
 	private String endpoint;
 }
