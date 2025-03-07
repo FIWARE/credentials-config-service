@@ -103,7 +103,7 @@ public interface ServiceMapper {
 	}
 
 	/**
-	 * Map a list of string-entries, encoding TrustedParticipants endpoints to a list of {@link EndpointEntry} with
+	 * Map a list of TrustedParticipantsListVO-entries, to a list of {@link EndpointEntry} with
 	 * type {{@link EndpointType#TRUSTED_PARTICIPANTS}
 	 */
 	default List<EndpointEntry> participantsToEntries(List<TrustedParticipantsListVO> endpoints) {
