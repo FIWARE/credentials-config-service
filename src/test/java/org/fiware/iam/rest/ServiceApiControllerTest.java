@@ -7,7 +7,7 @@ import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.fiware.iam.ccs.api.ServiceApiTestClient;
 import org.fiware.iam.ccs.api.ServiceApiTestSpec;
 import org.fiware.iam.ccs.model.*;
@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @RequiredArgsConstructor
 @MicronautTest
 public class ServiceApiControllerTest implements ServiceApiTestSpec {
+
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	public final ServiceApiTestClient testClient;
 	public final ServiceRepository serviceRepository;
@@ -107,7 +110,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		CredentialVO credentialVO5 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
-				.trustedParticipantsLists(List.of("http://tir.de"));
+				.trustedParticipantsLists(List.of(new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
 		serviceScopesEntryVO5.add(credentialVO5);
 		ServiceVO serviceVO5 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO5));
 		serviceVO5.setDefaultOidcScope("test-oidc-scope");
@@ -118,7 +121,9 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		CredentialVO credentialVO6 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
-				.trustedParticipantsLists(List.of("http://tir.de", "another-tir.de"));
+				.trustedParticipantsLists(List.of(
+						new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI),
+						new TrustedParticipantsListVO().url("http://another-tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
 		serviceScopesEntryVO6.add(credentialVO6);
 		ServiceVO serviceVO6 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO6));
 		serviceVO6.setDefaultOidcScope("test-oidc-scope");
@@ -128,7 +133,9 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				ServiceScopesEntryVOTestExample.build();
 		CredentialVO credentialVO7 = CredentialVOTestExample.build()
 				.type("my-credential")
-				.trustedParticipantsLists(List.of("http://tir.de", "another-tir.de"));
+				.trustedParticipantsLists(List.of(
+						new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI),
+						new TrustedParticipantsListVO().url("http://another-tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
 		serviceScopesEntryVO7.add(credentialVO7);
 		ServiceVO serviceVO7 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO7));
 		serviceVO7.setDefaultOidcScope("test-oidc-scope");
@@ -138,11 +145,13 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				ServiceScopesEntryVOTestExample.build();
 		CredentialVO credentialVO8_1 = CredentialVOTestExample.build()
 				.type("my-credential")
-				.trustedParticipantsLists(List.of("http://tir.de", "another-tir.de"));
+				.trustedParticipantsLists(List.of(
+						new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI),
+						new TrustedParticipantsListVO().url("http://another-tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
 		CredentialVO credentialVO8_2 = CredentialVOTestExample.build()
 				.type("another-credential")
 				.trustedIssuersLists(List.of("til.de"))
-				.trustedParticipantsLists(List.of("http://tir.de"));
+				.trustedParticipantsLists(List.of(new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
 		serviceScopesEntryVO8.add(credentialVO8_1);
 		serviceScopesEntryVO8.add(credentialVO8_2);
 		ServiceVO serviceVO8 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO8));
@@ -156,16 +165,20 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		CredentialVO credentialVO9_1 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
-				.trustedParticipantsLists(List.of("http://tir.de"));
+				.trustedParticipantsLists(List.of(new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
 		serviceScopesEntryVO9_1.add(credentialVO9_1);
 		CredentialVO credentialVO9_2 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
-				.trustedParticipantsLists(List.of("http://tir.de", "another-tir.de"));
+				.trustedParticipantsLists(List.of(
+						new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI),
+						new TrustedParticipantsListVO().url("http://another-tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
 		CredentialVO credentialVO9_3 = CredentialVOTestExample.build()
 				.type("another-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
-				.trustedParticipantsLists(List.of("http://tir.de", "another-tir.de"));
+				.trustedParticipantsLists(List.of(
+						new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI),
+						new TrustedParticipantsListVO().url("http://another-tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
 		serviceScopesEntryVO9_2.add(credentialVO9_2);
 		serviceScopesEntryVO9_2.add(credentialVO9_3);
 		ServiceVO serviceVO9 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO9_1, "another-oidc-scope", serviceScopesEntryVO9_2));
@@ -183,6 +196,18 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		serviceScopesEntryV10.add(credentialV10);
 		ServiceVO serviceV10 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV10));
 		serviceV10.setDefaultOidcScope("test-oidc-scope");
+
+		// 11 - Credential with participants list in old format
+		ServiceScopesEntryVO serviceScopesEntryV11 =
+				ServiceScopesEntryVOTestExample.build();
+		CredentialVO credentialV11 = CredentialVOTestExample.build()
+				.type("my-credential")
+				.trustedIssuersLists(List.of("http://til.de"))
+				.trustedParticipantsLists(List.of("http://tir.de"));
+		serviceScopesEntryV11.add(credentialV11);
+		ServiceVO serviceV11 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV11));
+		serviceV11.setDefaultOidcScope("test-oidc-scope");
+
 
 		return Stream.of(
 				// Empty credential
@@ -209,8 +234,14 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				// 8 - 2 Credentials with type (2 TIR entries / 1 TIR + 1 TIL entry)
 				Arguments.of(serviceVO8,
 						List.of("my-credential", "another-credential")),
+				// 9 - 2 OIDC scopes, each with different credentials
+				Arguments.of(serviceVO9,
+						List.of("my-credential")),
 				// 10 - Credential with holder verification
 				Arguments.of(serviceV10,
+						List.of("my-credential")),
+				// 11 - Credential with participants list in old format
+				Arguments.of(serviceV11,
 						List.of("my-credential"))
 		);
 	}
@@ -340,10 +371,9 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 
 	@Override
 	public void getService200() throws Exception {
-
 		HttpResponse<ServiceVO> theServiceResponse = testClient.getService(theService.getId());
 		assertEquals(HttpStatus.OK, theServiceResponse.getStatus(), "The service should be responded with status OK.");
-		assertEquals(theService, theServiceResponse.body(), "The service should be responded with equal service object.");
+		assertServiceVOsEqual(theService, theServiceResponse.body());
 	}
 
 	@ParameterizedTest
@@ -445,7 +475,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 	public void updateService200() throws Exception {
 		HttpResponse<ServiceVO> updatedService = testClient.updateService(theService.getId(), theService);
 		assertEquals(HttpStatus.OK, updatedService.status(), "The service should have been updated withst status OK.");
-		assertEquals(theService, updatedService.body(), "The service should have been updated with an equal object.");
+		assertServiceVOsEqual(theService, updatedService.body());
 	}
 
 	@ParameterizedTest
@@ -484,5 +514,59 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		ServiceVO serviceVO = getEmptyService();
 		assertEquals(HttpStatus.NOT_FOUND, testClient.updateService(serviceVO.getId(), serviceVO).status(),
 				"Only existing services can be updated.");
+	}
+
+	private void assertServiceVOsEqual(ServiceVO service0, ServiceVO service1) {
+		assertEquals(service0.getId(), service1.getId(), "ID should be equal.");
+		assertEquals(service0.getDefaultOidcScope(), service1.getDefaultOidcScope(), "Services should have the equal default scope.");
+		assertEquals(service0.getOidcScopes().keySet(), service1.getOidcScopes().keySet(), "The services should have the same scopes.");
+
+		Set<String> scopeKeys = service0.getOidcScopes().keySet();
+		for (String scope : scopeKeys) {
+			assertScopeEntryEquals(service0.getOidcScopes().get(scope), service1.getOidcScopes().get(scope));
+		}
+
+	}
+
+	private void assertScopeEntryEquals(ServiceScopesEntryVO entryVO1, ServiceScopesEntryVO entryVO2) {
+		assertEquals(entryVO1.size(), entryVO2.size(), "The scopes should have the same number of entries.");
+
+		// we don't care about order
+		Set<OrderIgnoringCredential> entries1 = entryVO1.stream().map(this::fromCredentialVO).collect(Collectors.toSet());
+		Set<OrderIgnoringCredential> entries2 = entryVO2.stream().map(this::fromCredentialVO).collect(Collectors.toSet());
+		assertEquals(entries1, entries2, "Credentials in the scope should be equal.");
+	}
+
+	public OrderIgnoringCredential fromCredentialVO(CredentialVO credentialVO) {
+		OrderIgnoringCredential orderIgnoringCredential = new OrderIgnoringCredential();
+		orderIgnoringCredential.setType(credentialVO.getType());
+		orderIgnoringCredential.setTrustedParticipantsLists(credentialVO.getTrustedParticipantsLists().stream().map(o -> {
+			if (o instanceof String stringEntry) {
+				// expand the string to the new format.
+				return new TrustedParticipantsListVO().type(TrustedParticipantsListVO.Type.EBSI).url(stringEntry);
+			} else if (o instanceof Map<?, ?> mapEntry) {
+				return OBJECT_MAPPER.convertValue(mapEntry, TrustedParticipantsListVO.class);
+			} else {
+				return o;
+			}
+		}).collect(Collectors.toSet()));
+		orderIgnoringCredential.setTrustedIssuersLists(new HashSet<>(credentialVO.getTrustedIssuersLists()));
+		orderIgnoringCredential.setHolderVerificationVO(credentialVO.getHolderVerification());
+		return orderIgnoringCredential;
+	}
+
+	@EqualsAndHashCode
+	@ToString
+	class OrderIgnoringCredential {
+
+		@Setter
+		private String type;
+		@Setter
+		private Set<Object> trustedParticipantsLists;
+		@Setter
+		private Set<String> trustedIssuersLists;
+		@Setter
+		private HolderVerificationVO holderVerificationVO;
+
 	}
 }

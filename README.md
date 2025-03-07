@@ -68,7 +68,7 @@ It is used to manage the service-related entries and provides endpoints to retri
 
 ### Example
 
-To have information about an service available, it first needs to be created.
+To have information about a service available, it first needs to be created.
 An example request would look like:
 ```shell
 curl -X 'POST' \
@@ -81,10 +81,10 @@ curl -X 'POST' \
     {
       "type": "VerifiableCredential",
       "trustedParticipantsLists": [
-        "https://tir-pdc.gaia-x.fiware.dev"
+        "https://tir-pdc.ebsi.fiware.dev"
       ],
       "trustedIssuersLists": [
-        "https://til-pdc.gaia-x.fiware.dev"
+        "https://til-pdc.ebsi.fiware.dev"
       ]
     }
   ]
@@ -92,7 +92,7 @@ curl -X 'POST' \
 ```
 Such configuration will define that the requested scope for authentication-requests to ```packet-delivery-service``` is 
 ```VerifiableCredential``` and that the issuer needs to be listed as a trusted-participant at 
-```https://tir-pdc.gaia-x.fiware.dev```  and that the information about the trusted-issuers should be retrieved from ```https://til-pdc.gaia-x.fiware.dev```.
+```https://tir-pdc.ebsi.fiware.dev```  and that the information about the trusted-issuers should be retrieved from ```https://til-pdc.ebsi.fiware.dev```.
 
 The verifier can access that information via:
 
@@ -108,10 +108,67 @@ and receive:
     {
       "type": "VerifiableCredential",
       "trustedParticipantsLists": [
-        "https://tir-pdc.gaia-x.fiware.dev"
+        {
+          "type": "ebsi",
+          "url": "https://tir-pdc.ebsi.fiware.dev"
+        }
       ],
       "trustedIssuersLists": [
-        "https://til-pdc.gaia-x.fiware.dev"
+        "https://til-pdc.ebsi.fiware.dev"
+      ]
+    }
+  ]
+}
+```
+
+The config service also supports GAIA-X Registries as participants list(even mixed configurations):
+```shell
+curl -X 'POST' \
+  'http://localhost:8080/service' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "id": "packet-delivery-service",
+  "credentials": [
+    {
+      "type": "VerifiableCredential",
+      "trustedParticipantsLists": [
+        {
+          "type": "ebsi",
+          "url": "https://tir-pdc.ebsi.fiware.dev"
+        },
+        {
+          "type": "gaia-x",
+          "url": "https://registry.lab.gaia-x.eu"
+        }
+      ],
+      "trustedIssuersLists": [
+        "https://til-pdc.ebsi.fiware.dev"
+      ]
+    }
+  ]
+}'
+```
+
+and receive:
+```shell
+{
+  "id": "packet-delivery-service",
+  "credentials": [
+    {
+      "type": "VerifiableCredential",
+      "trustedParticipantsLists": [
+        {
+          "type": "ebsi",
+          "url": "https://tir-pdc.ebsi.fiware.dev"
+        },
+        {
+          "type": "gaia-x",
+          "url": "https://registry.lab.gaia-x.eu"
+        }
+      ],
+      "trustedIssuersLists": [
+        "https://til-pdc.ebsi.fiware.dev"
       ]
     }
   ]
