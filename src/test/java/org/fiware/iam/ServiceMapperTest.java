@@ -25,7 +25,7 @@ class ServiceMapperTest {
 		CredentialVO credentialVO_1 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
-				.trustedParticipantsLists(List.of(new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
+				.trustedParticipantsLists(List.of(new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
 		serviceScopesEntryVO_1.add(credentialVO_1);
 		ServiceVO serviceVO = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO_1));
 		serviceVO.setDefaultOidcScope("test-oidc-scope");
@@ -74,20 +74,20 @@ class ServiceMapperTest {
 		CredentialVO credentialVO_1 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
-				.trustedParticipantsLists(List.of(new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
+				.trustedParticipantsLists(List.of(new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
 		serviceScopesEntryVO_1.add(credentialVO_1);
 		CredentialVO credentialVO_2 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
 				.trustedParticipantsLists(List.of(
-						new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI),
-						new TrustedParticipantsListVO().url("http://another-tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
+						new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI),
+						new TrustedParticipantsListEndpointVO().url("http://another-tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
 		CredentialVO credentialVO_3 = CredentialVOTestExample.build()
 				.type("another-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
 				.trustedParticipantsLists(List.of(
-						new TrustedParticipantsListVO().url("http://tir.de").type(TrustedParticipantsListVO.Type.EBSI),
-						new TrustedParticipantsListVO().url("http://another-tir.de").type(TrustedParticipantsListVO.Type.EBSI)));
+						new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI),
+						new TrustedParticipantsListEndpointVO().url("http://another-tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
 		serviceScopesEntryVO_2.add(credentialVO_2);
 		serviceScopesEntryVO_2.add(credentialVO_3);
 		ServiceVO serviceVO = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO_1, "another-oidc-scope", serviceScopesEntryVO_2));
@@ -202,17 +202,17 @@ class ServiceMapperTest {
 		assertEquals("my-credential", credentialVO.getType(),
 				"the credential should have the correct type");
 
-		List<TrustedParticipantsListVO> trustedParticipantsLists = credentialVO.getTrustedParticipantsLists()
+		List<TrustedParticipantsListEndpointVO> trustedParticipantsLists = credentialVO.getTrustedParticipantsLists()
 				.stream()
-				.filter(TrustedParticipantsListVO.class::isInstance)
-				.map(TrustedParticipantsListVO.class::cast)
+				.filter(TrustedParticipantsListEndpointVO.class::isInstance)
+				.map(TrustedParticipantsListEndpointVO.class::cast)
 				.toList();
 		assertEquals(1, trustedParticipantsLists.size(),
 				"the trusted participants list should have 1 entry");
-		TrustedParticipantsListVO trustedParticipantsListVO = trustedParticipantsLists.get(0);
+		TrustedParticipantsListEndpointVO trustedParticipantsListVO = trustedParticipantsLists.get(0);
 		assertEquals("http://tir.de", trustedParticipantsListVO.getUrl(),
 				"the trusted participants list entry should have the correct URL");
-		assertEquals(TrustedParticipantsListVO.Type.EBSI, trustedParticipantsListVO.getType(),
+		assertEquals(TrustedParticipantsListEndpointVO.Type.EBSI, trustedParticipantsListVO.getType(),
 				"the trusted participants list entry should have the correct type");
 
 		List<String> trustedIssuersLists = credentialVO.getTrustedIssuersLists();

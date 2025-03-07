@@ -18,9 +18,9 @@ public interface ServiceMapper {
 
 	Service map(ServiceVO serviceVO);
 
-	TrustedParticipantsListVO.Type map(ListType type);
+	TrustedParticipantsListEndpointVO.Type map(ListType type);
 
-	ListType map(TrustedParticipantsListVO.Type type);
+	ListType map(TrustedParticipantsListEndpointVO.Type type);
 
 	default Map<String, Collection<Credential>> map(Map<String, ServiceScopesEntryVO> value) {
 		return Optional.ofNullable(value)
@@ -66,7 +66,7 @@ public interface ServiceMapper {
 					if (tpl instanceof String tplS) {
 						trustedList.add(stringToEndpointEntry(tplS));
 					} else {
-						trustedList.add(participantToEntry(OBJECT_MAPPER.convertValue(tpl, TrustedParticipantsListVO.class)));
+						trustedList.add(participantToEntry(OBJECT_MAPPER.convertValue(tpl, TrustedParticipantsListEndpointVO.class)));
 					}
 				});
 
@@ -106,7 +106,7 @@ public interface ServiceMapper {
 	 * Map a list of TrustedParticipantsListVO-entries, to a list of {@link EndpointEntry} with
 	 * type {{@link EndpointType#TRUSTED_PARTICIPANTS}
 	 */
-	default List<EndpointEntry> participantsToEntries(List<TrustedParticipantsListVO> endpoints) {
+	default List<EndpointEntry> participantsToEntries(List<TrustedParticipantsListEndpointVO> endpoints) {
 		if (endpoints == null) {
 			return null;
 		}
@@ -118,7 +118,7 @@ public interface ServiceMapper {
 				.toList();
 	}
 
-	default EndpointEntry participantToEntry(TrustedParticipantsListVO trustedParticipantsListVO) {
+	default EndpointEntry participantToEntry(TrustedParticipantsListEndpointVO trustedParticipantsListVO) {
 		return new EndpointEntry()
 				.setEndpoint(trustedParticipantsListVO.getUrl())
 				.setListType(map(trustedParticipantsListVO.getType()))
@@ -156,13 +156,13 @@ public interface ServiceMapper {
 	/**
 	 * Return participant endpoints from the {@link EndpointEntry} list to a list of strings
 	 */
-	default List<TrustedParticipantsListVO> entriesToParticipants(List<EndpointEntry> endpoints) {
+	default List<TrustedParticipantsListEndpointVO> entriesToParticipants(List<EndpointEntry> endpoints) {
 		if (endpoints == null) {
 			return List.of();
 		}
 		return endpoints.stream()
 				.filter(entry -> entry.getType().equals(EndpointType.TRUSTED_PARTICIPANTS))
-				.map(entry -> new TrustedParticipantsListVO()
+				.map(entry -> new TrustedParticipantsListEndpointVO()
 						.type(map(entry.getListType()))
 						.url(entry.getEndpoint()))
 				.toList();
