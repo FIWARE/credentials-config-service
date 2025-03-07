@@ -1,10 +1,8 @@
 package org.fiware.iam;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fiware.iam.ccs.model.*;
-import org.fiware.iam.repository.Credential;
-import org.fiware.iam.repository.EndpointEntry;
-import org.fiware.iam.repository.EndpointType;
-import org.fiware.iam.repository.Service;
+import org.fiware.iam.repository.*;
 import org.mapstruct.Mapper;
 
 import java.util.*;
@@ -16,8 +14,13 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "jsr330")
 public interface ServiceMapper {
 
+	static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
 	Service map(ServiceVO serviceVO);
 
+	TrustedParticipantsListEndpointVO.Type map(ListType type);
+
+	ListType map(TrustedParticipantsListEndpointVO.Type type);
 
 	default Map<String, Collection<Credential>> map(Map<String, ServiceScopesEntryVO> value) {
 		return Optional.ofNullable(value)
@@ -41,6 +44,14 @@ public interface ServiceMapper {
 
 	ServiceVO map(Service service);
 
+	default EndpointEntry stringToEndpointEntry(String url) {
+		EndpointEntry entry = new EndpointEntry();
+		entry.setType(EndpointType.TRUSTED_PARTICIPANTS);
+		entry.setListType(ListType.EBSI);
+		entry.setEndpoint(url);
+		return entry;
+	}
+
 	default Credential map(CredentialVO credentialVO) {
 		if (credentialVO == null) {
 			return null;
@@ -49,7 +60,16 @@ public interface ServiceMapper {
 				.setCredentialType(credentialVO.getType());
 		List<EndpointEntry> trustedList = new ArrayList<>();
 		Optional.ofNullable(issuersToEntries(credentialVO.getTrustedIssuersLists())).ifPresent(trustedList::addAll);
-		Optional.ofNullable(participantsToEntries(credentialVO.getTrustedParticipantsLists())).ifPresent(trustedList::addAll);
+
+		credentialVO.getTrustedParticipantsLists()
+				.forEach(tpl -> {
+					if (tpl instanceof String tplS) {
+						trustedList.add(stringToEndpointEntry(tplS));
+					} else {
+						trustedList.add(participantToEntry(OBJECT_MAPPER.convertValue(tpl, TrustedParticipantsListEndpointVO.class)));
+					}
+				});
+
 		credential.setTrustedLists(trustedList);
 
 		if (credentialVO.getHolderVerification() != null) {
@@ -76,25 +96,33 @@ public interface ServiceMapper {
 		return new CredentialVO()
 				.type(credential.getCredentialType())
 				.trustedIssuersLists(entriesToIssuers(credential.getTrustedLists()))
-				.trustedParticipantsLists(entriesToParticipants(credential.getTrustedLists()))
+				.trustedParticipantsLists(entriesToParticipants(credential.getTrustedLists()).stream().map(Object.class::cast).toList())
 				.holderVerification(new HolderVerificationVO()
 						.enabled(credential.isVerifyHolder())
 						.claim(credential.getHolderClaim()));
 	}
 
 	/**
-	 * Map a list of string-entries, encoding TrustedParticipants endpoints to a list of {@link EndpointEntry} with
+	 * Map a list of TrustedParticipantsListVO-entries, to a list of {@link EndpointEntry} with
 	 * type {{@link EndpointType#TRUSTED_PARTICIPANTS}
 	 */
-	default List<EndpointEntry> participantsToEntries(List<String> endpoints) {
+	default List<EndpointEntry> participantsToEntries(List<TrustedParticipantsListEndpointVO> endpoints) {
 		if (endpoints == null) {
 			return null;
 		}
 		return endpoints.stream()
 				.map(endpoint -> new EndpointEntry()
-						.setEndpoint(endpoint)
+						.setEndpoint(endpoint.getUrl())
+						.setListType(map(endpoint.getType()))
 						.setType(EndpointType.TRUSTED_PARTICIPANTS))
 				.toList();
+	}
+
+	default EndpointEntry participantToEntry(TrustedParticipantsListEndpointVO trustedParticipantsListVO) {
+		return new EndpointEntry()
+				.setEndpoint(trustedParticipantsListVO.getUrl())
+				.setListType(map(trustedParticipantsListVO.getType()))
+				.setType(EndpointType.TRUSTED_PARTICIPANTS);
 	}
 
 	/**
@@ -128,13 +156,15 @@ public interface ServiceMapper {
 	/**
 	 * Return participant endpoints from the {@link EndpointEntry} list to a list of strings
 	 */
-	default List<String> entriesToParticipants(List<EndpointEntry> endpoints) {
+	default List<TrustedParticipantsListEndpointVO> entriesToParticipants(List<EndpointEntry> endpoints) {
 		if (endpoints == null) {
 			return List.of();
 		}
 		return endpoints.stream()
 				.filter(entry -> entry.getType().equals(EndpointType.TRUSTED_PARTICIPANTS))
-				.map(EndpointEntry::getEndpoint)
+				.map(entry -> new TrustedParticipantsListEndpointVO()
+						.type(map(entry.getListType()))
+						.url(entry.getEndpoint()))
 				.toList();
 	}
 
