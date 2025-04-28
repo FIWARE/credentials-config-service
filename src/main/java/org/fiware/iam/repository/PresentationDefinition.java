@@ -20,5 +20,6 @@ public class PresentationDefinition {
 	private String name;
 	private String purpose;
 	private Collection<InputDescriptor> inputDescriptors;
+	private Map<String, Object> format;
 }
 
