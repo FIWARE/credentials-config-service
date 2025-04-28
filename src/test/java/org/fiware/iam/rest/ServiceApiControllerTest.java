@@ -228,6 +228,9 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.trustedParticipantsLists(List.of("http://tir.de"));
 		addToScopeEntry(serviceScopesEntryV12, credentialV12);
 		PresentationDefinitionVO presentationDefinitionVO = PresentationDefinitionVOTestExample.build();
+		FormatVO formatVO = new FormatVO();
+		formatVO.setAdditionalProperties("vc+sd-jwt", Map.of("alg", List.of("ES256")));
+		presentationDefinitionVO.setFormat(formatVO);
 		serviceScopesEntryV12.setPresentationDefinition(presentationDefinitionVO);
 		ServiceVO serviceV12 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV12));
 		serviceV12.setDefaultOidcScope("test-oidc-scope");

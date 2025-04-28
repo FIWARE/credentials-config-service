@@ -42,6 +42,7 @@ public class ServiceApiController implements ServiceApi {
         validateServiceVO(serviceVO);
 
         Service mappedService = serviceMapper.map(serviceVO);
+        log.warn("Mapped service {}", mappedService);
         Service savedService = serviceRepository.save(mappedService);
 
         return HttpResponse.created(
