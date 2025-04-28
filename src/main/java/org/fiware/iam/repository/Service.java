@@ -28,5 +28,5 @@ public class Service {
 	private String defaultOidcScope;
 
 	@TypeDef(type = DataType.JSON)
-	private Map<String,Collection<Credential>> oidcScopes;
+	private Map<String,ScopeEntry> oidcScopes;
 }

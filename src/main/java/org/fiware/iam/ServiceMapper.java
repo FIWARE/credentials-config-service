@@ -27,7 +27,7 @@ public interface ServiceMapper {
 				.orElseGet(Map::of)
 				.entrySet()
 				.stream()
-				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream().map(this::map).toList()));
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getCredentials().stream().map(this::map).toList()));
 	}
 
 	default Map<String, ServiceScopesEntryVO> mapCredentials(Map<String, Collection<Credential>> value) {
@@ -36,7 +36,7 @@ public interface ServiceMapper {
 				.orElseGet(Map::of)
 				.entrySet().forEach(entry -> {
 					ServiceScopesEntryVO credentialVOS = new ServiceScopesEntryVO();
-					entry.getValue().stream().map(this::map).forEach(credentialVOS::add);
+					entry.getValue().stream().map(this::map).forEach(credentialVOS.getCredentials()::add);
 					answer.put(entry.getKey(), credentialVOS);
 				});
 		return answer;

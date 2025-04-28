@@ -73,7 +73,7 @@ public class ServiceApiController implements ServiceApi {
                 .getOidcScopes()
                 .get(selectedOidcScope);
         ScopeVO scopeVO = new ScopeVO();
-        scopeVO.addAll(serviceScopesEntryVO.stream().map(CredentialVO::getType).toList());
+        scopeVO.addAll(serviceScopesEntryVO.getCredentials().stream().map(CredentialVO::getType).toList());
         return HttpResponse.ok(scopeVO);
     }
 
@@ -141,6 +141,7 @@ public class ServiceApiController implements ServiceApi {
         }
 
         Optional<CredentialVO> nullType = serviceScopesEntryVO
+                .getCredentials()
                 .stream()
                 .filter(cvo -> cvo.getType() == null)
                 .findFirst();

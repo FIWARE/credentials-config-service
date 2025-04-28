@@ -1,12 +1,10 @@
 package org.fiware.iam;
 
 import org.fiware.iam.ccs.model.*;
-import org.fiware.iam.repository.Credential;
-import org.fiware.iam.repository.EndpointEntry;
-import org.fiware.iam.repository.EndpointType;
-import org.fiware.iam.repository.Service;
+import org.fiware.iam.repository.*;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +24,10 @@ class ServiceMapperTest {
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
 				.trustedParticipantsLists(List.of(new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO_1.add(credentialVO_1);
+
+		List<CredentialVO> credentialVOS = new ArrayList<>(serviceScopesEntryVO_1.getCredentials());
+		credentialVOS.add(credentialVO_1);
+		serviceScopesEntryVO_1.credentials(credentialVOS);
 		ServiceVO serviceVO = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO_1));
 		serviceVO.setDefaultOidcScope("test-oidc-scope");
 
@@ -37,11 +38,11 @@ class ServiceMapperTest {
 		assertEquals("test-oidc-scope", service.getDefaultOidcScope(),
 				"should have equal default OIDC scope");
 
-		Map<String, Collection<Credential>> serviceScopes = service.getOidcScopes();
+		Map<String, ScopeEntry> serviceScopes = service.getOidcScopes();
 		assertEquals(1, serviceScopes.size(), "Collection of service scopes should have 1 entry");
 
 		assertTrue(serviceScopes.containsKey("test-oidc-scope"), "ServiceScope should have correct name");
-		Collection<Credential> credentials = serviceScopes.get("test-oidc-scope");
+		Collection<Credential> credentials = serviceScopes.get("test-oidc-scope").getCredentials();
 		assertEquals(1, credentials.size(), "Collection of credentials should have 1 entry");
 
 		Credential credential = credentials.iterator().next();
@@ -75,7 +76,11 @@ class ServiceMapperTest {
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
 				.trustedParticipantsLists(List.of(new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO_1.add(credentialVO_1);
+
+		List<CredentialVO> credentialVOS_1 = new ArrayList<>(serviceScopesEntryVO_1.getCredentials());
+		credentialVOS_1.add(credentialVO_1);
+		serviceScopesEntryVO_1.credentials(credentialVOS_1);
+
 		CredentialVO credentialVO_2 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
@@ -88,8 +93,11 @@ class ServiceMapperTest {
 				.trustedParticipantsLists(List.of(
 						new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI),
 						new TrustedParticipantsListEndpointVO().url("http://another-tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO_2.add(credentialVO_2);
-		serviceScopesEntryVO_2.add(credentialVO_3);
+
+		List<CredentialVO> credentialVOS_2 = new ArrayList<>(serviceScopesEntryVO_2.getCredentials());
+		credentialVOS_2.add(credentialVO_2);
+		credentialVOS_2.add(credentialVO_3);
+		serviceScopesEntryVO_2.credentials(credentialVOS_2);
 		ServiceVO serviceVO = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO_1, "another-oidc-scope", serviceScopesEntryVO_2));
 		serviceVO.setDefaultOidcScope("test-oidc-scope");
 
@@ -100,13 +108,13 @@ class ServiceMapperTest {
 		assertEquals("test-oidc-scope", service.getDefaultOidcScope(),
 				"should have correct default OIDC scope");
 
-		Map<String, Collection<Credential>> serviceScopes = service.getOidcScopes();
+		Map<String, ScopeEntry> serviceScopes = service.getOidcScopes();
 		assertEquals(2, serviceScopes.size(),
 				"Collection of service scopes should have 2 entries");
 
 		Collection<Credential> credentials = null;
-		for (Map.Entry<String, Collection<Credential>> serviceScope : serviceScopes.entrySet()) {
-			credentials = serviceScope.getValue();
+		for (Map.Entry<String, ScopeEntry> serviceScope : serviceScopes.entrySet()) {
+			credentials = serviceScope.getValue().getCredentials();
 			if (credentials.size() == 1) {
 				assertEquals("test-oidc-scope", serviceScope.getKey(),
 						"ServiceScope should have correct name");
@@ -179,7 +187,11 @@ class ServiceMapperTest {
 
 		Service service = new Service();
 		service.setDefaultOidcScope("test-oidc-scope");
-		service.setOidcScopes(Map.of("test-oidc-scope", credentials));
+
+		ScopeEntry scopeEntry = new ScopeEntry();
+		scopeEntry.setCredentials(credentials);
+
+		service.setOidcScopes(Map.of("test-oidc-scope", scopeEntry));
 
 		// Map to ServiceVO
 		ServiceVO serviceVO = serviceMapper.map(service);
@@ -196,9 +208,9 @@ class ServiceMapperTest {
 		assertNotNull(serviceScopesEntryVO,
 				"ServiceVO should have an OIDC scope with key '\"test-oidc-scope\"'");
 
-		assertEquals(1, serviceScopesEntryVO.size(),
+		assertEquals(1, serviceScopesEntryVO.getCredentials().size(),
 				"the OIDC scope should have 1 credential");
-		CredentialVO credentialVO = serviceScopesEntryVO.get(0);
+		CredentialVO credentialVO = serviceScopesEntryVO.getCredentials().get(0);
 		assertEquals("my-credential", credentialVO.getType(),
 				"the credential should have the correct type");
 
