@@ -22,6 +22,23 @@ public interface ServiceMapper {
 
 	ListType map(TrustedParticipantsListEndpointVO.Type type);
 
+	default Map<String,Object> map(FormatVO value) {
+		if(value == null) {
+			return null;
+		}
+		return value.getAdditionalProperties();
+	}
+
+	default Map<String,Object> map(Object value) {
+		if(value == null) {
+			return null;
+		}
+		if(value instanceof FormatVO formatVO) {
+			return formatVO.getAdditionalProperties();
+		}
+		return Map.of();
+	}
+
 	default Map<String, Collection<Credential>> map(Map<String, ServiceScopesEntryVO> value) {
 		return Optional.ofNullable(value)
 				.orElseGet(Map::of)

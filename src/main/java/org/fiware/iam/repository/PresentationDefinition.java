@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Data entity to map a PresentationDefinition
