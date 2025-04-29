@@ -22,18 +22,21 @@ public interface ServiceMapper {
 
 	ListType map(TrustedParticipantsListEndpointVO.Type type);
 
-	default Map<String,Object> map(FormatVO value) {
-		if(value == null) {
+	default Map<String, FormatObject> map(FormatVO value) {
+		if (value == null || value.getAdditionalProperties() == null) {
 			return null;
 		}
-		return value.getAdditionalProperties();
+		return value.getAdditionalProperties()
+				.entrySet()
+				.stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> OBJECT_MAPPER.convertValue(e.getValue(), FormatObject.class)));
 	}
 
-	default Map<String,Object> map(Object value) {
-		if(value == null) {
+	default Map<String, Object> map(Object value) {
+		if (value == null) {
 			return null;
 		}
-		if(value instanceof FormatVO formatVO) {
+		if (value instanceof FormatVO formatVO) {
 			return formatVO.getAdditionalProperties();
 		}
 		return Map.of();

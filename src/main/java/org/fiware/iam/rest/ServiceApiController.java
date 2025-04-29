@@ -1,5 +1,7 @@
 package org.fiware.iam.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
@@ -8,6 +10,7 @@ import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.Sort;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fiware.iam.ServiceMapper;
@@ -17,7 +20,6 @@ import org.fiware.iam.exception.ConflictException;
 import org.fiware.iam.repository.Service;
 import org.fiware.iam.repository.ServiceRepository;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.Optional;
 
@@ -32,6 +34,7 @@ public class ServiceApiController implements ServiceApi {
 
 	private final ServiceRepository serviceRepository;
 	private final ServiceMapper serviceMapper;
+	private final ObjectMapper objectMapper;
 
 	@Override
 	public HttpResponse<Object> createService(@NonNull ServiceVO serviceVO) {
@@ -42,7 +45,7 @@ public class ServiceApiController implements ServiceApi {
 		validateServiceVO(serviceVO);
 
 		Service mappedService = serviceMapper.map(serviceVO);
-		log.warn("Mapped service {}", mappedService);
+
 		Service savedService = serviceRepository.save(mappedService);
 
 		return HttpResponse.created(
@@ -82,7 +85,11 @@ public class ServiceApiController implements ServiceApi {
 	public HttpResponse<ServiceVO> getService(@NonNull String id) {
 		Optional<ServiceVO> serviceVO = serviceRepository.findById(id)
 				.map(serviceMapper::map);
-		log.warn("Got service {}", serviceVO.get());
+		try {
+			log.warn("Got service {}", objectMapper.writeValueAsString(serviceVO.get()));
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
 
 		return serviceVO
 				.map(HttpResponse::ok)

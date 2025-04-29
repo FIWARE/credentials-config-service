@@ -27,6 +27,7 @@ public class Service {
 
 	private String defaultOidcScope;
 
-	@TypeDef(type = DataType.JSON)
-	private Map<String,ScopeEntry> oidcScopes;
+	@OneToMany(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
+	@MapKey(name = "scopeKey")
+	private Map<String, ScopeEntry> oidcScopes;
 }

@@ -21,17 +21,22 @@ import java.util.List;
  */
 @Introspected
 @Data
-@Accessors(chain = true)
 @Entity
+@Accessors(chain = true)
 public class Credential {
 
+	@Id
+	@GeneratedValue
 	private Integer id;
-
 	private String credentialType;
 
+	private boolean verifyHolder;
+	private String holderClaim;
+
+	@ManyToOne
+	private ScopeEntry scopeEntry;
+
+	@OneToMany(mappedBy = "credential", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<EndpointEntry> trustedLists;
 
-	private boolean verifyHolder;
-
-	private String holderClaim;
 }

@@ -7,7 +7,7 @@ import io.micronaut.data.model.query.builder.sql.Dialect;
 /**
  * Extension of the {@link ServiceRepository} for the H2-dialect
  */
-@Requires(property = "datasources.default.dialect", value = "H2")
+@Requires(property = "micronaut.default.dialect", value = "H2")
 @JdbcRepository(dialect = Dialect.H2)
 public interface H2ServiceRepository extends ServiceRepository {
 }

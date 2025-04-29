@@ -1,17 +1,17 @@
 package org.fiware.iam.rest;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
+import lombok.ToString;
 import org.fiware.iam.ccs.api.ServiceApiTestClient;
 import org.fiware.iam.ccs.api.ServiceApiTestSpec;
 import org.fiware.iam.ccs.model.*;
-import org.fiware.iam.repository.PresentationDefinition;
 import org.fiware.iam.repository.ServiceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,14 +25,16 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@RequiredArgsConstructor
-@MicronautTest
+@MicronautTest(packages = {"org.fiware.iam.rest"})
 public class ServiceApiControllerTest implements ServiceApiTestSpec {
 
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	public final ServiceApiTestClient testClient;
-	public final ServiceRepository serviceRepository;
+	@Inject
+	public ServiceApiTestClient testClient;
+
+	@Inject
+	public ServiceRepository serviceRepository;
 
 	private ServiceVO theService;
 	private List<String> expectedScopes;
@@ -436,7 +438,8 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 			ServiceScopesEntryVO serviceScopesEntryVO =
 					ServiceScopesEntryVOTestExample.build();
 			CredentialVO credentialVO = CredentialVOTestExample.build();
-			addToScopeEntry(serviceScopesEntryVO, credentialVO);;
+			addToScopeEntry(serviceScopesEntryVO, credentialVO);
+			;
 			ServiceVO serviceVO = ServiceVOTestExample.build()
 					.id(String.valueOf(i))
 					.oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO));

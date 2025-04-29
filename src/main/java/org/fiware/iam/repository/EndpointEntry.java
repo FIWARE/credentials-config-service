@@ -1,12 +1,7 @@
 package org.fiware.iam.repository;
 
 import io.micronaut.core.annotation.Introspected;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -17,15 +12,22 @@ import lombok.experimental.Accessors;
  */
 @Introspected
 @Data
-@Accessors(chain = true)
 @Entity
+@Accessors(chain = true)
 public class EndpointEntry {
 
+	@Id
+	@GeneratedValue
 	private Integer id;
 
+	@Enumerated(EnumType.STRING)
 	private EndpointType type;
 
+	@Enumerated(EnumType.STRING)
 	private ListType listType = ListType.EBSI;
 
 	private String endpoint;
+
+	@ManyToOne
+	private Credential credential;
 }
