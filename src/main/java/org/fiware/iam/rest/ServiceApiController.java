@@ -1,8 +1,5 @@
 package org.fiware.iam.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.data.model.Page;
@@ -29,12 +26,11 @@ import java.util.Optional;
 @Slf4j
 @Controller("${general.basepath:/}")
 @RequiredArgsConstructor
-@Introspected
 public class ServiceApiController implements ServiceApi {
 
 	private final ServiceRepository serviceRepository;
+	private final H2ScopeRepository scopeRepository;
 	private final ServiceMapper serviceMapper;
-	private final ObjectMapper objectMapper;
 
 	@Override
 	public HttpResponse<Object> createService(@NonNull ServiceVO serviceVO) {
@@ -85,12 +81,6 @@ public class ServiceApiController implements ServiceApi {
 	public HttpResponse<ServiceVO> getService(@NonNull String id) {
 		Optional<ServiceVO> serviceVO = serviceRepository.findById(id)
 				.map(serviceMapper::map);
-		try {
-			log.warn("Got service {}", objectMapper.writeValueAsString(serviceVO.get()));
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
-
 		return serviceVO
 				.map(HttpResponse::ok)
 				.orElse(HttpResponse.notFound());

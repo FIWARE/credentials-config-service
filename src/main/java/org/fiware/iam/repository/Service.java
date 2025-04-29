@@ -1,25 +1,21 @@
 package org.fiware.iam.repository;
 
 import io.micronaut.core.annotation.Introspected;
-import io.micronaut.core.annotation.TypeHint;
-import io.micronaut.data.annotation.TypeDef;
-import io.micronaut.data.model.DataType;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
+import io.micronaut.data.annotation.Id;
+import io.micronaut.data.annotation.MappedEntity;
+import io.micronaut.data.annotation.Relation;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Data entity representing a service
  */
 @Introspected
-@Accessors(chain = true)
-@Data
-@Entity
-@EqualsAndHashCode
+@Getter
+@Setter
+@MappedEntity
 public class Service {
 
 	@Id
@@ -27,7 +23,6 @@ public class Service {
 
 	private String defaultOidcScope;
 
-	@OneToMany(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
-	@MapKey(name = "scopeKey")
-	private Map<String, ScopeEntry> oidcScopes;
+	@Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "service", cascade = Relation.Cascade.ALL)
+	private Collection<ScopeEntry> oidcScopes;
 }

@@ -13,4 +13,6 @@ import java.util.Optional;
  */
 public interface ServiceRepository extends PageableRepository<Service, String> {
 
+	@Join(value = "oidcScopes", type = Join.Type.LEFT_FETCH)
+	Optional<Service> findById(@NonNull String id);
 }

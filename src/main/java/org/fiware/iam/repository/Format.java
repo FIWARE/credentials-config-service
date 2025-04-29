@@ -6,14 +6,14 @@ import lombok.Setter;
 
 import java.util.Collection;
 
-/**
- * Data entity to map Constraints
- */
 @Introspected
 @Getter
 @Setter
-public class Constraints {
+public class Format {
 
-	private Collection<Field> fields;
+	private String formatKey;
+
+	private Collection<String> alg;
+	private Collection<String> proofType;
 
 }

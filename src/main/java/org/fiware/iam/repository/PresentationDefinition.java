@@ -1,35 +1,31 @@
 package org.fiware.iam.repository;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.data.annotation.Id;
-import io.micronaut.data.annotation.TypeDef;
-import io.micronaut.data.model.DataType;
-import jakarta.persistence.*;
+import io.micronaut.data.annotation.MappedEntity;
+import io.micronaut.data.annotation.Relation;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Data entity to map a PresentationDefinition
  */
 @Introspected
-@Data
-@Entity
-@Accessors(chain = true)
+@Getter
+@Setter
 public class PresentationDefinition {
 
-	@Id
-	private String  id;
+	private String id;
 	private String name;
 	private String purpose;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	private Collection<InputDescriptor> inputDescriptors;
+	private Collection<Format> format;
 
-	@OneToMany(mappedBy = "presentationDefinition", cascade = CascadeType.ALL, orphanRemoval = true)
-	@MapKey(name = "formatKey")
-	private Map<String, FormatObject> format;
 }
 

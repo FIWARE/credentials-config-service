@@ -19,6 +19,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,14 +40,23 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 	@Inject
 	public ServiceRepository serviceRepository;
 
+	@Inject
+	public DataSource dataSource;
+
 	private ServiceVO theService;
 	private List<String> expectedScopes;
 	private int pageSize;
 	private int pageNumber;
 
 	@BeforeEach
-	public void cleanUp() {
-		serviceRepository.deleteAll();
+	public void cleanUp() throws SQLException {
+		try (Connection conn = dataSource.getConnection();
+			 Statement stmt = conn.createStatement()) {
+			stmt.execute("SET REFERENTIAL_INTEGRITY FALSE");
+			stmt.execute("TRUNCATE TABLE service");
+			stmt.execute("TRUNCATE TABLE scope_entry");
+			stmt.execute("SET REFERENTIAL_INTEGRITY TRUE");
+		}
 	}
 
 	@Override

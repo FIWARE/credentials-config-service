@@ -140,6 +140,11 @@
             <artifactId>micronaut-jackson-databind</artifactId>
         </dependency>
 
+        <!-- required for config micronaut > 4.x -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+        </dependency>
 
         <!-- db -->
         <dependency>
@@ -151,10 +156,6 @@
             <groupId>io.micronaut.data</groupId>
             <artifactId>micronaut-data-jdbc</artifactId>
             <version>${micronaut.data.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.micronaut.sql</groupId>
-            <artifactId>micronaut-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>io.micronaut.sql</groupId>
@@ -239,6 +240,10 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/test/resources</directory>
                 <filtering>true</filtering>
             </resource>
         </resources>
