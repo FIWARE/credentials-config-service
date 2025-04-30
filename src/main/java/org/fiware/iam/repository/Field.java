@@ -21,5 +21,5 @@ public class Field {
 	private Boolean optional;
 
 	private Collection<String> path;
-
+	private Object filter;
 }
