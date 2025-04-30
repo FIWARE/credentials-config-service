@@ -29,7 +29,6 @@ import java.util.Optional;
 public class ServiceApiController implements ServiceApi {
 
 	private final ServiceRepository serviceRepository;
-	private final H2ScopeRepository scopeRepository;
 	private final ServiceMapper serviceMapper;
 
 	@Override
