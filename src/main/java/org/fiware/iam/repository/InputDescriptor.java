@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collection;
+
 /**
  * Data entity to map an InputDescriptor
  */
@@ -22,5 +24,5 @@ public class InputDescriptor {
 	private String purpose;
 
 	private Constraints constraints;
-
+	private Collection<Format> format;
 }
