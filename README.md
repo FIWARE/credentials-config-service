@@ -77,22 +77,56 @@ curl -X 'POST' \
   -H 'Content-Type: application/json' \
   -d '{
   "id": "packet-delivery-service",
-  "credentials": [
-    {
-      "type": "VerifiableCredential",
-      "trustedParticipantsLists": [
-        "https://tir-pdc.ebsi.fiware.dev"
+  "defaultOidcScope": "default",
+  "oidcScopes": {
+    "default": {
+      "credentials": [
+        {
+          "type": "VerifiableCredential",
+          "trustedParticipantsLists": [
+            "https://tir-pdc.ebsi.fiware.dev"
+          ],
+          "trustedIssuersLists": [
+            "https://til-pdc.ebsi.fiware.dev"
+          ]
+        }
       ],
-      "trustedIssuersLists": [
-        "https://til-pdc.ebsi.fiware.dev"
-      ]
+      "presentationDefinition": {
+        "id": "somethingUnique",
+        "name": "Presentation to be requested.",
+        "purpose": "something that describes our request.",
+        "input_descriptors": [
+          {
+            "id": "somethingUnique",
+            "name": "User Age request",
+            "purpose": "Only users above a certain age should get service access",
+            "constraints": {
+              "fields": [
+                {
+                  "id": "somethingUnique",
+                  "name": "User Age request",
+                  "purpose": "Only users above a certain age should get service access",
+                  "optional": false,
+                  "path": [
+                      "$.dateOfBirth"
+                  ]
+                }
+              ]
+            },
+            "format": {
+              "vc+sd-jwt": 
+                "alg": ["ES256"]
+          }
+        ]
+      }
     }
-  ]
+  }
 }'
 ```
 Such configuration will define that the requested scope for authentication-requests to ```packet-delivery-service``` is 
 ```VerifiableCredential``` and that the issuer needs to be listed as a trusted-participant at 
 ```https://tir-pdc.ebsi.fiware.dev```  and that the information about the trusted-issuers should be retrieved from ```https://til-pdc.ebsi.fiware.dev```.
+Additionally, it describes the presentation to be requested need to include the claim ```$.dateOfBirth``` and should be a ```vc+sd-jwt``` credential, signed by an ```ES256``` algorithm.
 
 The verifier can access that information via:
 
@@ -100,26 +134,7 @@ The verifier can access that information via:
 curl --location 'localhost:8080/service/packet-delivery-service'
 ```
 
-and receive:
-```shell
-{
-  "id": "packet-delivery-service",
-  "credentials": [
-    {
-      "type": "VerifiableCredential",
-      "trustedParticipantsLists": [
-        {
-          "type": "ebsi",
-          "url": "https://tir-pdc.ebsi.fiware.dev"
-        }
-      ],
-      "trustedIssuersLists": [
-        "https://til-pdc.ebsi.fiware.dev"
-      ]
-    }
-  ]
-}
-```
+#### Support for Gaia-X registries
 
 The config service also supports GAIA-X Registries as participants list(even mixed configurations):
 ```shell
@@ -187,6 +202,62 @@ and receive:
   "VerifiableCredential"
 ]
 ```
+
+#### Presentation Definition
+
+For each service and scope, a [Presentation Definition](https://identity.foundation/presentation-exchange/#presentation-definition) can be defined. 
+The Presentation Definition will be requested in the OID4VP exchange from the Holder's Wallet. 
+
+Example:
+
+```json
+  "presentationDefinition": {
+    "id": "somethingUnique",
+    "name": "Presentation to be requested.",
+    "purpose": "something that describes our request.",
+    "input_descriptors": [
+      {
+        "id": "somethingUnique",
+        "name": "User Age request",
+        "purpose": "Only users above a certain age should get service access",
+        "constraints": {
+          "fields": [
+            {
+              "id": "credential-type",
+              "name": "Type of the credential to be requested",
+              "purpose": "We do only accept offial documents for proofing the age.",
+              "optional": false,
+              "path": [
+                 "$.vct" 
+              ],
+              "filter": {
+                "const": "NaturalPersonCredential"         
+              }
+            },
+            {
+              "id": "user-age",
+              "name": "User Age request",
+              "purpose": "Only users above a certain age should get service access",
+              "optional": false,
+              "path": [
+                  "$.dateOfBirth"
+              ]
+            }
+          ]
+        },
+        "format": {
+          "vc+sd-jwt": 
+            "alg": ["ES256"]
+      }
+    ]
+  }
+```
+
+This definition will request a credential of type ```NaturalPersonCredential```, that contains the claim ```$.dateOfBirth```(defined by a JsonPath expression),
+in the ```vc+sd-jwt``` format, signed by the ```ES256``` algorithm. While PresentationDefinitions allow very fine-grained control about the claims and 
+credentials to be requested, most wallets do only support a limited complexity(f.e. only level-one path expressions or no filtering). At the moment, 
+its recommended to keep complexity at the minimal level.
+
 
 ## License
 
