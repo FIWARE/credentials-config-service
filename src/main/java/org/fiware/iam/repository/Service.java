@@ -4,8 +4,10 @@ import io.micronaut.core.annotation.Introspected;
 import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;
 import io.micronaut.data.annotation.Relation;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Collection;
 
@@ -16,6 +18,8 @@ import java.util.Collection;
 @Getter
 @Setter
 @MappedEntity
+@EqualsAndHashCode
+@ToString
 public class Service {
 
 	@Id

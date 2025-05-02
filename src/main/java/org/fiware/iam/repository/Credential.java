@@ -1,15 +1,10 @@
 package org.fiware.iam.repository;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.micronaut.core.annotation.Introspected;
-import io.micronaut.data.annotation.GeneratedValue;
-import io.micronaut.data.annotation.Id;
-import io.micronaut.data.annotation.MappedEntity;
-import io.micronaut.data.annotation.Relation;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Accessors;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -19,6 +14,8 @@ import java.util.List;
 @Introspected
 @Getter
 @Setter
+@EqualsAndHashCode
+@ToString
 public class Credential {
 
 	private String credentialType;
