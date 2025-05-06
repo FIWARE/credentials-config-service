@@ -6,21 +6,24 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
- * Data entity to map a credential
+ * Data entity to map a Field
  */
 @Introspected
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
-public class Credential {
+public class Field {
 
-	private String credentialType;
-	private boolean verifyHolder;
-	private String holderClaim;
-	private List<EndpointEntry> trustedLists;
+	private String id;
 
+	private String name;
+	private String purpose;
+	private Boolean optional;
+
+	private Collection<String> path;
+	private Object filter;
 }

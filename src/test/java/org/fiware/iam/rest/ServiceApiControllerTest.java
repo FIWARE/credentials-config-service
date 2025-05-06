@@ -1,13 +1,14 @@
 package org.fiware.iam.rest;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
+import lombok.ToString;
 import org.fiware.iam.ccs.api.ServiceApiTestClient;
 import org.fiware.iam.ccs.api.ServiceApiTestSpec;
 import org.fiware.iam.ccs.model.*;
@@ -18,20 +19,29 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@RequiredArgsConstructor
-@MicronautTest
+@MicronautTest(packages = {"org.fiware.iam.rest"})
 public class ServiceApiControllerTest implements ServiceApiTestSpec {
 
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	public final ServiceApiTestClient testClient;
-	public final ServiceRepository serviceRepository;
+	@Inject
+	public ServiceApiTestClient testClient;
+
+	@Inject
+	public ServiceRepository serviceRepository;
+
+	@Inject
+	public DataSource dataSource;
 
 	private ServiceVO theService;
 	private List<String> expectedScopes;
@@ -39,8 +49,14 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 	private int pageNumber;
 
 	@BeforeEach
-	public void cleanUp() {
-		serviceRepository.deleteAll();
+	public void cleanUp() throws SQLException {
+		try (Connection conn = dataSource.getConnection();
+			 Statement stmt = conn.createStatement()) {
+			stmt.execute("SET REFERENTIAL_INTEGRITY FALSE");
+			stmt.execute("TRUNCATE TABLE service");
+			stmt.execute("TRUNCATE TABLE scope_entry");
+			stmt.execute("SET REFERENTIAL_INTEGRITY TRUE");
+		}
 	}
 
 	@Override
@@ -65,11 +81,19 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		ServiceScopesEntryVO serviceScopesEntryVO =
 				ServiceScopesEntryVOTestExample.build();
 		CredentialVO credentialVO = CredentialVOTestExample.build();
-		serviceScopesEntryVO.add(credentialVO);
+		List<CredentialVO> credentialVOS = new ArrayList<>(serviceScopesEntryVO.getCredentials());
+		credentialVOS.add(credentialVO);
+		serviceScopesEntryVO.credentials(credentialVOS);
 		ServiceVO serviceVO = ServiceVOTestExample.build();
 		serviceVO.setDefaultOidcScope("test-oidc-scope");
 		serviceVO.setOidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO));
 		return serviceVO;
+	}
+
+	private static void addToScopeEntry(ServiceScopesEntryVO scopesEntryVO, CredentialVO credentialVO) {
+		List<CredentialVO> credentialVOS = new ArrayList<>(scopesEntryVO.getCredentials());
+		credentialVOS.add(credentialVO);
+		scopesEntryVO.credentials(credentialVOS);
 	}
 
 	private static Stream<Arguments> validServices() {
@@ -80,7 +104,8 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		ServiceScopesEntryVO serviceScopesEntryVO2 =
 				ServiceScopesEntryVOTestExample.build();
 		CredentialVO credentialVO2 = CredentialVOTestExample.build().type("my-credential");
-		serviceScopesEntryVO2.add(credentialVO2);
+		addToScopeEntry(serviceScopesEntryVO2, credentialVO2);
+
 		ServiceVO serviceVO2 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO2));
 		serviceVO2.setDefaultOidcScope("test-oidc-scope");
 
@@ -90,7 +115,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		CredentialVO credentialVO3 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"));
-		serviceScopesEntryVO3.add(credentialVO3);
+		addToScopeEntry(serviceScopesEntryVO3, credentialVO3);
 		ServiceVO serviceVO3 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO3));
 		serviceVO3.setDefaultOidcScope("test-oidc-scope");
 
@@ -100,7 +125,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		CredentialVO credentialVO4 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de", "http://another-til.de"));
-		serviceScopesEntryVO4.add(credentialVO4);
+		addToScopeEntry(serviceScopesEntryVO4, credentialVO4);
 		ServiceVO serviceVO4 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO4));
 		serviceVO4.setDefaultOidcScope("test-oidc-scope");
 
@@ -111,7 +136,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
 				.trustedParticipantsLists(List.of(new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO5.add(credentialVO5);
+		addToScopeEntry(serviceScopesEntryVO5, credentialVO5);
 		ServiceVO serviceVO5 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO5));
 		serviceVO5.setDefaultOidcScope("test-oidc-scope");
 
@@ -124,7 +149,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.trustedParticipantsLists(List.of(
 						new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI),
 						new TrustedParticipantsListEndpointVO().url("http://another-tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO6.add(credentialVO6);
+		addToScopeEntry(serviceScopesEntryVO6, credentialVO6);
 		ServiceVO serviceVO6 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO6));
 		serviceVO6.setDefaultOidcScope("test-oidc-scope");
 
@@ -136,7 +161,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.trustedParticipantsLists(List.of(
 						new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI),
 						new TrustedParticipantsListEndpointVO().url("http://another-tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO7.add(credentialVO7);
+		addToScopeEntry(serviceScopesEntryVO7, credentialVO7);
 		ServiceVO serviceVO7 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO7));
 		serviceVO7.setDefaultOidcScope("test-oidc-scope");
 
@@ -152,8 +177,8 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.type("another-credential")
 				.trustedIssuersLists(List.of("til.de"))
 				.trustedParticipantsLists(List.of(new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO8.add(credentialVO8_1);
-		serviceScopesEntryVO8.add(credentialVO8_2);
+		addToScopeEntry(serviceScopesEntryVO8, credentialVO8_1);
+		addToScopeEntry(serviceScopesEntryVO8, credentialVO8_2);
 		ServiceVO serviceVO8 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO8));
 		serviceVO8.setDefaultOidcScope("test-oidc-scope");
 
@@ -166,7 +191,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
 				.trustedParticipantsLists(List.of(new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO9_1.add(credentialVO9_1);
+		addToScopeEntry(serviceScopesEntryVO9_1, credentialVO9_1);
 		CredentialVO credentialVO9_2 = CredentialVOTestExample.build()
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
@@ -179,8 +204,8 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.trustedParticipantsLists(List.of(
 						new TrustedParticipantsListEndpointVO().url("http://tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI),
 						new TrustedParticipantsListEndpointVO().url("http://another-tir.de").type(TrustedParticipantsListEndpointVO.Type.EBSI)));
-		serviceScopesEntryVO9_2.add(credentialVO9_2);
-		serviceScopesEntryVO9_2.add(credentialVO9_3);
+		addToScopeEntry(serviceScopesEntryVO9_2, credentialVO9_2);
+		addToScopeEntry(serviceScopesEntryVO9_2, credentialVO9_3);
 		ServiceVO serviceVO9 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO9_1, "another-oidc-scope", serviceScopesEntryVO9_2));
 		serviceVO9.setDefaultOidcScope("test-oidc-scope");
 
@@ -193,7 +218,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.holderVerification(HolderVerificationVOTestExample.build()
 						.enabled(true)
 						.claim("theHolder"));
-		serviceScopesEntryV10.add(credentialV10);
+		addToScopeEntry(serviceScopesEntryV10, credentialV10);
 		ServiceVO serviceV10 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV10));
 		serviceV10.setDefaultOidcScope("test-oidc-scope");
 
@@ -204,10 +229,26 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.type("my-credential")
 				.trustedIssuersLists(List.of("http://til.de"))
 				.trustedParticipantsLists(List.of("http://tir.de"));
-		serviceScopesEntryV11.add(credentialV11);
+		addToScopeEntry(serviceScopesEntryV11, credentialV11);
 		ServiceVO serviceV11 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV11));
 		serviceV11.setDefaultOidcScope("test-oidc-scope");
 
+
+		// 12 - Service with a presentation definition
+		ServiceScopesEntryVO serviceScopesEntryV12 =
+				ServiceScopesEntryVOTestExample.build();
+		CredentialVO credentialV12 = CredentialVOTestExample.build()
+				.type("my-credential")
+				.trustedIssuersLists(List.of("http://til.de"))
+				.trustedParticipantsLists(List.of("http://tir.de"));
+		addToScopeEntry(serviceScopesEntryV12, credentialV12);
+		PresentationDefinitionVO presentationDefinitionVO = PresentationDefinitionVOTestExample.build();
+		FormatVO formatVO = new FormatVO();
+		formatVO.setAdditionalProperties("vc+sd-jwt", Map.of("alg", List.of("ES256")));
+		presentationDefinitionVO.setFormat(formatVO);
+		serviceScopesEntryV12.setPresentationDefinition(presentationDefinitionVO);
+		ServiceVO serviceV12 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV12));
+		serviceV12.setDefaultOidcScope("test-oidc-scope");
 
 		return Stream.of(
 				// Empty credential
@@ -242,6 +283,9 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 						List.of("my-credential")),
 				// 11 - Credential with participants list in old format
 				Arguments.of(serviceV11,
+						List.of("my-credential")),
+				// 11 - Credential with participants list in old format
+				Arguments.of(serviceV12,
 						List.of("my-credential"))
 		);
 	}
@@ -269,7 +313,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		ServiceScopesEntryVO serviceScopesEntryVO =
 				ServiceScopesEntryVOTestExample.build();
 		CredentialVO credentialVO = CredentialVOTestExample.build().type(null);
-		serviceScopesEntryVO.add(credentialVO);
+		addToScopeEntry(serviceScopesEntryVO, credentialVO);
 		ServiceVO serviceVO = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO));
 		serviceVO.setDefaultOidcScope("test-oidc-scope");
 
@@ -277,9 +321,9 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		ServiceScopesEntryVO serviceScopesEntryVO2 =
 				ServiceScopesEntryVOTestExample.build();
 		CredentialVO credentialVO2_1 = CredentialVOTestExample.build();
-		serviceScopesEntryVO2.add(credentialVO2_1);
 		CredentialVO credentialVO2_2 = CredentialVOTestExample.build().type(null);
-		serviceScopesEntryVO2.add(credentialVO2_2);
+		addToScopeEntry(serviceScopesEntryVO2, credentialVO2_1);
+		addToScopeEntry(serviceScopesEntryVO2, credentialVO2_2);
 		ServiceVO serviceVO2 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO2));
 		serviceVO2.setDefaultOidcScope("test-oidc-scope");
 
@@ -287,7 +331,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		ServiceScopesEntryVO serviceScopesEntryVO3 =
 				ServiceScopesEntryVOTestExample.build();
 		CredentialVO credentialVO3 = CredentialVOTestExample.build().type(null);
-		serviceScopesEntryVO3.add(credentialVO3);
+		addToScopeEntry(serviceScopesEntryVO3, credentialVO3);
 		ServiceVO serviceVO3 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO3));
 		serviceVO3.setDefaultOidcScope(null);
 
@@ -407,7 +451,8 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 			ServiceScopesEntryVO serviceScopesEntryVO =
 					ServiceScopesEntryVOTestExample.build();
 			CredentialVO credentialVO = CredentialVOTestExample.build();
-			serviceScopesEntryVO.add(credentialVO);
+			addToScopeEntry(serviceScopesEntryVO, credentialVO);
+			;
 			ServiceVO serviceVO = ServiceVOTestExample.build()
 					.id(String.valueOf(i))
 					.oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO));
@@ -529,11 +574,11 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 	}
 
 	private void assertScopeEntryEquals(ServiceScopesEntryVO entryVO1, ServiceScopesEntryVO entryVO2) {
-		assertEquals(entryVO1.size(), entryVO2.size(), "The scopes should have the same number of entries.");
+		assertEquals(entryVO1.getCredentials().size(), entryVO2.getCredentials().size(), "The scopes should have the same number of entries.");
 
 		// we don't care about order
-		Set<OrderIgnoringCredential> entries1 = entryVO1.stream().map(this::fromCredentialVO).collect(Collectors.toSet());
-		Set<OrderIgnoringCredential> entries2 = entryVO2.stream().map(this::fromCredentialVO).collect(Collectors.toSet());
+		Set<OrderIgnoringCredential> entries1 = entryVO1.getCredentials().stream().map(this::fromCredentialVO).collect(Collectors.toSet());
+		Set<OrderIgnoringCredential> entries2 = entryVO2.getCredentials().stream().map(this::fromCredentialVO).collect(Collectors.toSet());
 		assertEquals(entries1, entries2, "Credentials in the scope should be equal.");
 	}
 

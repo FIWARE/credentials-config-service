@@ -6,21 +6,18 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
- * Data entity to map a credential
+ * Data entity to map Constraints
  */
 @Introspected
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
-public class Credential {
+public class Constraints {
 
-	private String credentialType;
-	private boolean verifyHolder;
-	private String holderClaim;
-	private List<EndpointEntry> trustedLists;
+	private Collection<Field> fields;
 
 }
