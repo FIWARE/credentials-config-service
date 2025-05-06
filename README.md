@@ -225,7 +225,7 @@ Example:
             {
               "id": "credential-type",
               "name": "Type of the credential to be requested",
-              "purpose": "We do only accept offial documents for proofing the age.",
+              "purpose": "We do only accept offical documents for proofing the age.",
               "optional": false,
               "path": [
                  "$.vct" 
