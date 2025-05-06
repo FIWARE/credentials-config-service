@@ -150,12 +150,10 @@
         <dependency>
             <groupId>io.micronaut.data</groupId>
             <artifactId>micronaut-data-processor</artifactId>
-            <version>${micronaut.data.version}</version>
         </dependency>
         <dependency>
             <groupId>io.micronaut.data</groupId>
             <artifactId>micronaut-data-jdbc</artifactId>
-            <version>${micronaut.data.version}</version>
         </dependency>
         <dependency>
             <groupId>io.micronaut.sql</groupId>
