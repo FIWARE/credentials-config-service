@@ -79,6 +79,7 @@ public interface ServiceMapper {
 			credential.setVerifyHolder(false);
 			credential.setHolderClaim(null);
 		}
+		credential.setRequireCompliance(credentialVO.getRequireCompliance());
 		return credential;
 	}
 
@@ -97,6 +98,7 @@ public interface ServiceMapper {
 				.type(credential.getCredentialType())
 				.trustedIssuersLists(entriesToIssuers(credential.getTrustedLists()))
 				.trustedParticipantsLists(entriesToParticipants(credential.getTrustedLists()).stream().map(Object.class::cast).toList())
+				.requireCompliance(credential.isRequireCompliance())
 				.holderVerification(new HolderVerificationVO()
 						.enabled(credential.isVerifyHolder())
 						.claim(credential.getHolderClaim()));
