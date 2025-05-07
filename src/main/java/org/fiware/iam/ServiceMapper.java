@@ -80,9 +80,12 @@ public interface ServiceMapper {
 			credential.setHolderClaim(null);
 		}
 		credential.setRequireCompliance(credentialVO.getRequireCompliance());
-		credential.setIncludeInJwt(credentialVO.getIncludeInJWT());
+		credential.setJwtInclusion(map(credentialVO.getJwtInclusion()));
 		return credential;
 	}
+
+	JwtInclusion map(JwtInclusionVO jwtInclusionVO);
+	JwtInclusionVO map(JwtInclusion jwtInclusion);
 
 	default Collection<CredentialVO> map(Collection<Credential> credentials) {
 		if (credentials == null) {
@@ -100,7 +103,7 @@ public interface ServiceMapper {
 				.trustedIssuersLists(entriesToIssuers(credential.getTrustedLists()))
 				.trustedParticipantsLists(entriesToParticipants(credential.getTrustedLists()).stream().map(Object.class::cast).toList())
 				.requireCompliance(credential.isRequireCompliance())
-				.includeInJWT(credential.isIncludeInJwt())
+				.jwtInclusion(map(credential.getJwtInclusion()))
 				.holderVerification(new HolderVerificationVO()
 						.enabled(credential.isVerifyHolder())
 						.claim(credential.getHolderClaim()));

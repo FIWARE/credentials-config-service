@@ -26,7 +26,7 @@ public class Credential {
 
 	private boolean requireCompliance;
 
-	private boolean includeInJwt;
+	private JwtInclusion jwtInclusion;
 
 	private String holderClaim;
 }
