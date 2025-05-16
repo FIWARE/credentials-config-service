@@ -6,21 +6,18 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.List;
+import java.util.Collection;
 
-/**
- * Data entity to map a credential
- */
 @Introspected
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
-public class Credential {
+public class Format {
 
-	private String credentialType;
-	private boolean verifyHolder;
-	private String holderClaim;
-	private List<EndpointEntry> trustedLists;
+	private String formatKey;
+
+	private Collection<String> alg;
+	private Collection<String> proofType;
 
 }
