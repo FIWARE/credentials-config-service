@@ -12,8 +12,6 @@ micronaut:
         step: PT2s
         descriptions: false
 
----
-
 datasources:
   default:
     url: jdbc:mysql://localhost:3306/db

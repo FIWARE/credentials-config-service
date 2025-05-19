@@ -1,9 +1,10 @@
 package org.fiware.iam.repository;
 
 import io.micronaut.core.annotation.Introspected;
-import jakarta.persistence.Entity;
-import lombok.Data;
-import lombok.experimental.Accessors;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -11,17 +12,13 @@ import java.util.List;
  * Data entity to map a credential
  */
 @Introspected
-@Data
-@Accessors(chain = true)
-@Entity
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 public class Credential {
 
-	private Integer id;
-
 	private String credentialType;
-
-	private List<EndpointEntry> trustedLists;
-
 	private boolean verifyHolder;
 
 	private boolean requireCompliance;
@@ -29,4 +26,6 @@ public class Credential {
 	private JwtInclusion jwtInclusion;
 
 	private String holderClaim;
+	private List<EndpointEntry> trustedLists;
+
 }

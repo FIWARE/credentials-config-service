@@ -6,18 +6,24 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.Collection;
+
 /**
- * Entity to represent a single endpoint for either the trusted-issuers-list or the trusted-participants-list
+ * Data entity to map a Field
  */
 @Introspected
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
-public class EndpointEntry {
+public class Field {
 
-	private EndpointType type;
-	private ListType listType = ListType.EBSI;
-	private String endpoint;
+	private String id;
 
+	private String name;
+	private String purpose;
+	private Boolean optional;
+
+	private Collection<String> path;
+	private Object filter;
 }

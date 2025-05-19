@@ -16,33 +16,121 @@ public interface ServiceMapper {
 
 	static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	Service map(ServiceVO serviceVO);
+	default Service map(ServiceVO serviceVO) {
+		if (serviceVO == null) {
+			return null;
+		}
+		Service service = new Service();
+		service.setId(serviceVO.getId());
+		service.setDefaultOidcScope(serviceVO.getDefaultOidcScope());
+		service.setOidcScopes(
+				serviceVO.getOidcScopes()
+						.entrySet()
+						.stream()
+						.map(e -> {
+							ScopeEntry scopeEntry = new ScopeEntry();
+							scopeEntry.setScopeKey(e.getKey());
+							scopeEntry.setCredentials(e.getValue().getCredentials().stream().map(this::map).toList());
+							scopeEntry.setPresentationDefinition(this.map(e.getValue().getPresentationDefinition()));
+							return scopeEntry;
+						})
+						.toList());
+		return service;
+	}
+
+	default ServiceVO map(Service service) {
+		if (service == null) {
+			return null;
+		}
+		return new ServiceVO().id(service.getId())
+				.defaultOidcScope(service.getDefaultOidcScope())
+				.oidcScopes(this.toOidcScopes(service.getOidcScopes()));
+	}
+
+	default PresentationDefinition map(PresentationDefinitionVO presentationDefinitionVO) {
+		if (presentationDefinitionVO == null) {
+			return null;
+		}
+
+		PresentationDefinition presentationDefinition = new PresentationDefinition();
+		presentationDefinition.setId(presentationDefinitionVO.getId());
+		presentationDefinition.setName(presentationDefinitionVO.getName());
+		presentationDefinition.setPurpose(presentationDefinitionVO.getPurpose());
+		presentationDefinition.setInputDescriptors(this.mapInputDescriptors(presentationDefinitionVO
+				.getInputDescriptors()));
+		presentationDefinition.setFormat(this.mapFormatVO(presentationDefinitionVO
+				.getFormat()));
+
+		return presentationDefinition;
+	}
+
+	default Collection<InputDescriptor> mapInputDescriptors(Collection<InputDescriptorVO> inputDescriptorVOS) {
+		if (inputDescriptorVOS == null) {
+			return null;
+		}
+		return inputDescriptorVOS
+				.stream()
+				.map(this::mapInputDescriptorVO).toList();
+	}
+
+	default Collection<Format> mapFormatVO(FormatVO formatVO) {
+		if (formatVO == null || formatVO.getAdditionalProperties() == null) {
+			return null;
+		}
+
+		return formatVO.getAdditionalProperties()
+				.entrySet()
+				.stream()
+				.map(e -> {
+					FormatObject formatObject = OBJECT_MAPPER.convertValue(e.getValue(), FormatObject.class);
+					Format format = new Format();
+					format.setFormatKey(e.getKey());
+					format.setAlg(formatObject.getAlg());
+					format.setProofType(formatObject.getProofType());
+					return format;
+				}).toList();
+	}
+
+	default FormatVO mapFormats(Collection<Format> formats) {
+		if (formats == null) {
+			return null;
+		}
+
+		FormatVO formatVO = new FormatVO();
+		formats
+				.forEach(f -> {
+					FormatObject formatObject = new FormatObject();
+					formatObject.setAlg(f.getAlg());
+					formatObject.setProofType(f.getProofType());
+					formatVO.setAdditionalProperties(f.getFormatKey(), formatObject);
+				});
+		return formatVO;
+	}
+
+	InputDescriptorVO mapInputDescriptor(InputDescriptor inputDescriptor);
+
+	InputDescriptor mapInputDescriptorVO(InputDescriptorVO inputDescriptor);
+
+	PresentationDefinitionVO map(PresentationDefinition presentationDefinition);
 
 	TrustedParticipantsListEndpointVO.Type map(ListType type);
 
 	ListType map(TrustedParticipantsListEndpointVO.Type type);
 
-	default Map<String, Collection<Credential>> map(Map<String, ServiceScopesEntryVO> value) {
-		return Optional.ofNullable(value)
-				.orElseGet(Map::of)
-				.entrySet()
-				.stream()
-				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream().map(this::map).toList()));
-	}
-
-	default Map<String, ServiceScopesEntryVO> mapCredentials(Map<String, Collection<Credential>> value) {
-		Map<String, ServiceScopesEntryVO> answer = new HashMap<>();
-		Optional.ofNullable(value)
-				.orElseGet(Map::of)
-				.entrySet().forEach(entry -> {
-					ServiceScopesEntryVO credentialVOS = new ServiceScopesEntryVO();
-					entry.getValue().stream().map(this::map).forEach(credentialVOS::add);
-					answer.put(entry.getKey(), credentialVOS);
+	default Map<String, ServiceScopesEntryVO> toOidcScopes(Collection<ScopeEntry> scopeEntries) {
+		if (scopeEntries == null) {
+			return null;
+		}
+		Map<String, ServiceScopesEntryVO> scopes = new LinkedHashMap<>();
+		scopeEntries
+				.forEach(entry -> {
+					ServiceScopesEntryVO scopesEntryVO = new ServiceScopesEntryVO();
+					scopesEntryVO.setPresentationDefinition(this.map(entry.getPresentationDefinition()));
+					scopesEntryVO.setCredentials(this.map(entry.getCredentials()));
+					scopes.put(entry.getScopeKey(), scopesEntryVO);
 				});
-		return answer;
+		return scopes;
 	}
-
-	ServiceVO map(Service service);
 
 	default EndpointEntry stringToEndpointEntry(String url) {
 		EndpointEntry entry = new EndpointEntry();
@@ -56,8 +144,8 @@ public interface ServiceMapper {
 		if (credentialVO == null) {
 			return null;
 		}
-		Credential credential = new Credential()
-				.setCredentialType(credentialVO.getType());
+		Credential credential = new Credential();
+		credential.setCredentialType(credentialVO.getType());
 		List<EndpointEntry> trustedList = new ArrayList<>();
 		Optional.ofNullable(issuersToEntries(credentialVO.getTrustedIssuersLists())).ifPresent(trustedList::addAll);
 
@@ -87,7 +175,7 @@ public interface ServiceMapper {
 	JwtInclusion map(JwtInclusionVO jwtInclusionVO);
 	JwtInclusionVO map(JwtInclusion jwtInclusion);
 
-	default Collection<CredentialVO> map(Collection<Credential> credentials) {
+	default List<CredentialVO> map(Collection<Credential> credentials) {
 		if (credentials == null) {
 			return null;
 		}
@@ -118,18 +206,25 @@ public interface ServiceMapper {
 			return null;
 		}
 		return endpoints.stream()
-				.map(endpoint -> new EndpointEntry()
-						.setEndpoint(endpoint.getUrl())
-						.setListType(map(endpoint.getType()))
-						.setType(EndpointType.TRUSTED_PARTICIPANTS))
+				.map(endpoint -> {
+					EndpointEntry entry = new EndpointEntry();
+					entry.setEndpoint(endpoint.getUrl());
+					entry.setListType(map(endpoint.getType()));
+					entry.setType(EndpointType.TRUSTED_PARTICIPANTS);
+					return entry;
+				})
 				.toList();
 	}
 
 	default EndpointEntry participantToEntry(TrustedParticipantsListEndpointVO trustedParticipantsListVO) {
-		return new EndpointEntry()
-				.setEndpoint(trustedParticipantsListVO.getUrl())
-				.setListType(map(trustedParticipantsListVO.getType()))
-				.setType(EndpointType.TRUSTED_PARTICIPANTS);
+		if (trustedParticipantsListVO == null) {
+			return null;
+		}
+		EndpointEntry entry = new EndpointEntry();
+		entry.setEndpoint(trustedParticipantsListVO.getUrl());
+		entry.setListType(map(trustedParticipantsListVO.getType()));
+		entry.setType(EndpointType.TRUSTED_PARTICIPANTS);
+		return entry;
 	}
 
 	/**
@@ -141,9 +236,12 @@ public interface ServiceMapper {
 			return null;
 		}
 		return endpoints.stream()
-				.map(endpoint -> new EndpointEntry()
-						.setEndpoint(endpoint)
-						.setType(EndpointType.TRUSTED_ISSUERS))
+				.map(endpoint -> {
+					EndpointEntry entry = new EndpointEntry();
+					entry.setEndpoint(endpoint);
+					entry.setType(EndpointType.TRUSTED_ISSUERS);
+					return entry;
+				})
 				.toList();
 	}
 

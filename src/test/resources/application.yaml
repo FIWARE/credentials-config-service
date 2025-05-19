@@ -9,8 +9,6 @@ micronaut:
         step: PT2s
         descriptions: false
 
----
-
 datasources:
   default:
     url: jdbc:h2:mem:devDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
