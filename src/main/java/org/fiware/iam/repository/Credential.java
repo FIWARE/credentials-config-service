@@ -20,6 +20,11 @@ public class Credential {
 
 	private String credentialType;
 	private boolean verifyHolder;
+
+	private boolean requireCompliance;
+
+	private JwtInclusion jwtInclusion;
+
 	private String holderClaim;
 	private List<EndpointEntry> trustedLists;
 

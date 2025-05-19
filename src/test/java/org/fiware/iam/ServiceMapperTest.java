@@ -307,6 +307,7 @@ class ServiceMapperTest {
 		credential_03.setVerifyHolder(false);
 		credential_03.setHolderClaim("subject");
 		credential_03.setTrustedLists(List.of());
+		credential_03.setJwtInclusion(new JwtInclusion());
 
 		ScopeEntry scopeEntry_03 = new ScopeEntry();
 		scopeEntry_03.setScopeKey("default");
@@ -356,6 +357,7 @@ class ServiceMapperTest {
 				endpointEntry_04_02,
 				endpointEntry_04_01
 		));
+		credential_04.setJwtInclusion(new JwtInclusion());
 
 		ScopeEntry scopeEntry_04 = new ScopeEntry();
 		scopeEntry_04.setScopeKey("default");

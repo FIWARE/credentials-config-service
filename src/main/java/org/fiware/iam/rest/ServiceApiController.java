@@ -18,7 +18,10 @@ import org.fiware.iam.repository.Service;
 import org.fiware.iam.repository.ServiceRepository;
 
 import java.net.URI;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Implementation of the service api to configure services and there credentials
@@ -148,6 +151,51 @@ public class ServiceApiController implements ServiceApi {
 		if (nullType.isPresent()) {
 			throw new IllegalArgumentException("Type of a credential cannot be null.");
 		}
+
+		serviceVO
+				.getOidcScopes()
+				.values()
+				.forEach(this::validateKeyMappings);
 	}
 
+	private void validateKeyMappings(ServiceScopesEntryVO scopeEntry) {
+		if (scopeEntry.getFlatClaims()) {
+			List<String> includedKeys = scopeEntry.getCredentials()
+					.stream()
+					.filter(cvo -> cvo.getJwtInclusion().getEnabled())
+					.flatMap(credentialVO ->
+							credentialVO.getJwtInclusion()
+									.getClaimsToInclude()
+									.stream()
+									.map(claim -> {
+										if (claim.getNewKey() != null && !claim.getNewKey().isEmpty()) {
+											return claim.getNewKey();
+										}
+										return claim.getOriginalKey();
+									})
+					).toList();
+			if (includedKeys.size() != new HashSet(includedKeys).size()) {
+				throw new IllegalArgumentException("Configuration contains duplicate claim keys.");
+			}
+		} else {
+			scopeEntry.getCredentials()
+					.stream()
+					.filter(cvo -> cvo.getJwtInclusion().getEnabled())
+					.forEach(cvo -> {
+						List<String> claimKeys = cvo.getJwtInclusion()
+								.getClaimsToInclude()
+								.stream()
+								.map(claim -> {
+									if (claim.getNewKey() != null && !claim.getNewKey().isEmpty()) {
+										return claim.getNewKey();
+									}
+									return claim.getOriginalKey();
+								})
+								.toList();
+						if (claimKeys.size() != new HashSet(claimKeys).size()) {
+							throw new IllegalArgumentException("Configuration contains duplicate claim keys.");
+						}
+					});
+		}
+	}
 }

@@ -12,6 +12,7 @@ import lombok.ToString;
 import org.fiware.iam.ccs.api.ServiceApiTestClient;
 import org.fiware.iam.ccs.api.ServiceApiTestSpec;
 import org.fiware.iam.ccs.model.*;
+import org.fiware.iam.repository.JwtInclusion;
 import org.fiware.iam.repository.ServiceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -250,6 +251,34 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		ServiceVO serviceV12 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV12));
 		serviceV12.setDefaultOidcScope("test-oidc-scope");
 
+		// 13 - Service with jwt mapping
+		ServiceScopesEntryVO serviceScopesEntryV13 =
+				ServiceScopesEntryVOTestExample.build();
+
+		CredentialVO credentialV13 = CredentialVOTestExample.build()
+				.type("my-credential")
+				.jwtInclusion(JwtInclusionVOTestExample
+						.build()
+						.claimsToInclude(List.of(ClaimVOTestExample.build())));
+		addToScopeEntry(serviceScopesEntryV13, credentialV13);
+		ServiceVO serviceV13 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV13));
+		serviceV13.setDefaultOidcScope("test-oidc-scope");
+
+		// 14 - Service with jwt mapping
+		ServiceScopesEntryVO serviceScopesEntryV14 =
+				ServiceScopesEntryVOTestExample.build();
+
+		CredentialVO credentialV14 = CredentialVOTestExample.build()
+				.type("my-credential")
+				.jwtInclusion(JwtInclusionVOTestExample
+						.build()
+						.fullInclusion(true)
+						.claimsToInclude(List.of(ClaimVOTestExample.build())));
+		addToScopeEntry(serviceScopesEntryV14, credentialV14);
+		ServiceVO serviceV14 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV14));
+		serviceV14.setDefaultOidcScope("test-oidc-scope");
+
+
 		return Stream.of(
 				// Empty credential
 				Arguments.of(serviceVO,
@@ -284,8 +313,14 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				// 11 - Credential with participants list in old format
 				Arguments.of(serviceV11,
 						List.of("my-credential")),
-				// 11 - Credential with participants list in old format
+				// 12 - Credential with participants list in old format
 				Arguments.of(serviceV12,
+						List.of("my-credential")),
+				// 13 -  Service with jwt mapping
+				Arguments.of(serviceV13,
+						List.of("my-credential")),
+				// 13 -  Service with jwt mapping full inclusion
+				Arguments.of(serviceV13,
 						List.of("my-credential"))
 		);
 	}
@@ -335,6 +370,42 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		ServiceVO serviceVO3 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO3));
 		serviceVO3.setDefaultOidcScope(null);
 
+		// 4 - flat claims - duplicate keys included
+		ServiceScopesEntryVO scopesEntryVO04 =
+				ServiceScopesEntryVOTestExample.build();
+		JwtInclusionVO jwtInclusionVO = JwtInclusionVOTestExample.build()
+				.claimsToInclude(List.of(ClaimVOTestExample.build()
+						.originalKey("else")
+						.newKey("test")));
+		CredentialVO credentialVO4_01 = CredentialVOTestExample.build()
+				.type("MyCredential")
+				.jwtInclusion(jwtInclusionVO);
+		CredentialVO credentialVO4_02 = CredentialVOTestExample.build()
+				.type("MyOtherCredential")
+				.jwtInclusion(jwtInclusionVO);
+		addToScopeEntry(scopesEntryVO04, credentialVO4_01);
+		addToScopeEntry(scopesEntryVO04, credentialVO4_02);
+		ServiceVO serviceVO4 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", scopesEntryVO04));
+		serviceVO4.setDefaultOidcScope(null);
+
+		// 5 - duplicate keys included
+		ServiceScopesEntryVO scopesEntryVO05 =
+				ServiceScopesEntryVOTestExample.build();
+		JwtInclusionVO jwtInclusionVO_05 = JwtInclusionVOTestExample.build()
+				.claimsToInclude(List.of(
+						ClaimVOTestExample.build()
+								.originalKey("else")
+								.newKey("test"),
+						ClaimVOTestExample.build()
+								.originalKey("test")
+				));
+		CredentialVO credentialVO5 = CredentialVOTestExample.build()
+				.type("MyCredential")
+				.jwtInclusion(jwtInclusionVO_05);
+		addToScopeEntry(scopesEntryVO05, credentialVO5);
+		ServiceVO serviceVO5 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", scopesEntryVO05));
+		serviceVO5.setDefaultOidcScope(null);
+
 		return Stream.of(
 				// Service with empty OIDC scopes
 				Arguments.of(ServiceVOTestExample.build().oidcScopes(null)),
@@ -345,7 +416,11 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				// 2 - 2 Credentials, but 1 has empty type
 				Arguments.of(serviceVO2),
 				// 3 - 1 OIDC scope/Credential, but no default OIDC scope
-				Arguments.of(serviceVO3)
+				Arguments.of(serviceVO3),
+				// 4 - flat claims - duplicate keys included
+				Arguments.of(serviceVO4),
+				//  5 - duplicate keys included
+				Arguments.of(serviceVO5)
 		);
 	}
 
@@ -452,7 +527,7 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 					ServiceScopesEntryVOTestExample.build();
 			CredentialVO credentialVO = CredentialVOTestExample.build();
 			addToScopeEntry(serviceScopesEntryVO, credentialVO);
-			;
+
 			ServiceVO serviceVO = ServiceVOTestExample.build()
 					.id(String.valueOf(i))
 					.oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryVO));
