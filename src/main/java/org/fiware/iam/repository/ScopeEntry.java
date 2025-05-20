@@ -35,4 +35,5 @@ public class ScopeEntry {
 	@TypeDef(type = DataType.JSON)
 	private PresentationDefinition presentationDefinition;
 
+	private boolean flatClaims;
 }
