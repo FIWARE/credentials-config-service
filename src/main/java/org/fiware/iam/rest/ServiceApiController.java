@@ -164,8 +164,9 @@ public class ServiceApiController implements ServiceApi {
 					.stream()
 					.filter(cvo -> cvo.getJwtInclusion().getEnabled())
 					.flatMap(credentialVO ->
-							credentialVO.getJwtInclusion()
-									.getClaimsToInclude()
+							Optional.ofNullable(credentialVO.getJwtInclusion()
+									.getClaimsToInclude())
+									.orElse(List.of())
 									.stream()
 									.map(claim -> {
 										if (claim.getNewKey() != null && !claim.getNewKey().isEmpty()) {
