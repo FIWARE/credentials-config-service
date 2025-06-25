@@ -21,7 +21,6 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Implementation of the service api to configure services and there credentials
@@ -122,8 +121,10 @@ public class ServiceApiController implements ServiceApi {
 		}
 		// just in case none is set in the object
 		serviceVO.setId(id);
-		serviceRepository.deleteById(id);
-		return HttpResponse.ok(serviceMapper.map(serviceRepository.save(serviceMapper.map(serviceVO))));
+		Service toBeUpdated = serviceMapper.map(serviceVO);
+		log.info("The service: {}", toBeUpdated);
+		Service updatedService = serviceRepository.update(toBeUpdated);
+		return HttpResponse.ok(serviceMapper.map(updatedService));
 	}
 
 	// validate a service vo, e.g. check forbidden null values
