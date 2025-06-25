@@ -30,7 +30,8 @@ public interface ServiceMapper {
 						.map(e -> {
 							ScopeEntry scopeEntry = new ScopeEntry();
 							scopeEntry.setScopeKey(e.getKey());
-							scopeEntry.setCredentials(e.getValue().getCredentials().stream().map(this::map).toList());
+							scopeEntry.setCredentials(Optional.ofNullable(e.getValue().getCredentials()).
+									orElse(List.of()).stream().map(this::map).toList());
 							scopeEntry.setPresentationDefinition(this.map(e.getValue().getPresentationDefinition()));
 							return scopeEntry;
 						})
@@ -173,6 +174,7 @@ public interface ServiceMapper {
 	}
 
 	JwtInclusion map(JwtInclusionVO jwtInclusionVO);
+
 	JwtInclusionVO map(JwtInclusion jwtInclusion);
 
 	default List<CredentialVO> map(Collection<Credential> credentials) {

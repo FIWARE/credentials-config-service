@@ -75,7 +75,7 @@ public class ServiceApiController implements ServiceApi {
 				.getOidcScopes()
 				.get(selectedOidcScope);
 		ScopeVO scopeVO = new ScopeVO();
-		scopeVO.addAll(serviceScopesEntryVO.getCredentials().stream().map(CredentialVO::getType).toList());
+		scopeVO.addAll(Optional.ofNullable(serviceScopesEntryVO.getCredentials()).orElse(List.of()).stream().map(CredentialVO::getType).toList());
 		return HttpResponse.ok(scopeVO);
 	}
 
@@ -143,8 +143,9 @@ public class ServiceApiController implements ServiceApi {
 			throw new IllegalArgumentException("Default OIDC scope must exist in OIDC scopes array.");
 		}
 
-		Optional<CredentialVO> nullType = serviceScopesEntryVO
-				.getCredentials()
+		Optional<CredentialVO> nullType = Optional.ofNullable(serviceScopesEntryVO
+						.getCredentials())
+				.orElse(List.of())
 				.stream()
 				.filter(cvo -> cvo.getType() == null)
 				.findFirst();
@@ -160,12 +161,13 @@ public class ServiceApiController implements ServiceApi {
 
 	private void validateKeyMappings(ServiceScopesEntryVO scopeEntry) {
 		if (scopeEntry.getFlatClaims()) {
-			List<String> includedKeys = scopeEntry.getCredentials()
+			List<String> includedKeys = Optional.ofNullable(scopeEntry.getCredentials())
+					.orElse(List.of())
 					.stream()
 					.filter(cvo -> cvo.getJwtInclusion().getEnabled())
 					.flatMap(credentialVO ->
 							Optional.ofNullable(credentialVO.getJwtInclusion()
-									.getClaimsToInclude())
+											.getClaimsToInclude())
 									.orElse(List.of())
 									.stream()
 									.map(claim -> {
@@ -179,12 +181,13 @@ public class ServiceApiController implements ServiceApi {
 				throw new IllegalArgumentException("Configuration contains duplicate claim keys.");
 			}
 		} else {
-			scopeEntry.getCredentials()
+			Optional.ofNullable(scopeEntry.getCredentials())
+					.orElse(List.of())
 					.stream()
 					.filter(cvo -> cvo.getJwtInclusion().getEnabled())
 					.forEach(cvo -> {
-						List<String> claimKeys =Optional.ofNullable(cvo.getJwtInclusion()
-								.getClaimsToInclude())
+						List<String> claimKeys = Optional.ofNullable(cvo.getJwtInclusion()
+										.getClaimsToInclude())
 								.orElse(List.of())
 								.stream()
 								.map(claim -> {
