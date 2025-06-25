@@ -14,13 +14,16 @@ import org.fiware.iam.ServiceMapper;
 import org.fiware.iam.ccs.api.ServiceApi;
 import org.fiware.iam.ccs.model.*;
 import org.fiware.iam.exception.ConflictException;
+import org.fiware.iam.repository.ScopeEntry;
 import org.fiware.iam.repository.Service;
 import org.fiware.iam.repository.ServiceRepository;
 
 import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the service api to configure services and there credentials
@@ -116,13 +119,28 @@ public class ServiceApiController implements ServiceApi {
 			throw new IllegalArgumentException("The id of a service cannot be updated.");
 		}
 		validateServiceVO(serviceVO);
-		if (!serviceRepository.existsById(id)) {
+		Optional<Service> optionalOrginalService = serviceRepository.findById(id);
+		if (optionalOrginalService.isEmpty()) {
 			return HttpResponse.notFound();
 		}
-		// just in case none is set in the object
-		serviceVO.setId(id);
+
 		Service toBeUpdated = serviceMapper.map(serviceVO);
-		log.info("The service: {}", toBeUpdated);
+		Map<String, ScopeEntry> scopeEntryMap = toBeUpdated.getOidcScopes()
+				.stream().collect(Collectors.toMap(ScopeEntry::getScopeKey, sE -> sE));
+
+		Service originalService = optionalOrginalService.get();
+		List<ScopeEntry> scopeEntries = originalService.getOidcScopes().stream()
+				.map(scopeEntry -> {
+					if (scopeEntryMap.containsKey(scopeEntry.getScopeKey())) {
+						Long originalId = scopeEntryMap.get(scopeEntry.getScopeKey()).getId();
+						scopeEntry.setId(originalId);
+					}
+					return scopeEntry;
+				}).toList();
+
+		// just in case none is set in the object
+		toBeUpdated.setId(id);
+		toBeUpdated.setOidcScopes(scopeEntries);
 		Service updatedService = serviceRepository.update(toBeUpdated);
 		return HttpResponse.ok(serviceMapper.map(updatedService));
 	}
