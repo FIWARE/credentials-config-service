@@ -124,12 +124,12 @@ public class ServiceApiController implements ServiceApi {
 			return HttpResponse.notFound();
 		}
 
+		Service originalService = optionalOrginalService.get();
 		Service toBeUpdated = serviceMapper.map(serviceVO);
-		Map<String, ScopeEntry> scopeEntryMap = toBeUpdated.getOidcScopes()
+		Map<String, ScopeEntry> scopeEntryMap = originalService.getOidcScopes()
 				.stream().collect(Collectors.toMap(ScopeEntry::getScopeKey, sE -> sE));
 
-		Service originalService = optionalOrginalService.get();
-		List<ScopeEntry> scopeEntries = originalService.getOidcScopes().stream()
+		List<ScopeEntry> scopeEntries = toBeUpdated.getOidcScopes().stream()
 				.map(scopeEntry -> {
 					if (scopeEntryMap.containsKey(scopeEntry.getScopeKey())) {
 						Long originalId = scopeEntryMap.get(scopeEntry.getScopeKey()).getId();
