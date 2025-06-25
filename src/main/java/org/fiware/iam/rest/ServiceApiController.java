@@ -141,6 +141,7 @@ public class ServiceApiController implements ServiceApi {
 		// just in case none is set in the object
 		toBeUpdated.setId(id);
 		toBeUpdated.setOidcScopes(scopeEntries);
+
 		Service updatedService = serviceRepository.update(toBeUpdated);
 		return HttpResponse.ok(serviceMapper.map(updatedService));
 	}
