@@ -27,6 +27,8 @@ public class Service {
 
 	private String defaultOidcScope;
 
+	private AuthorizationType authorizationType;
+
 	@Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "service", cascade = Relation.Cascade.ALL)
 	private Collection<ScopeEntry> oidcScopes;
 }

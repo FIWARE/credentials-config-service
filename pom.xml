@@ -70,6 +70,9 @@
         <version.org.openapitools.generator-maven-plugin>6.6.0</version.org.openapitools.generator-maven-plugin>
         <version.io.kokuwa.micronaut.codegen>3.4.6</version.io.kokuwa.micronaut.codegen>
 
+        <!-- dcql -->
+        <version.io.github.wistefan.dcql-java>0.0.1</version.io.github.wistefan.dcql-java>
+
         <!-- test -->
         <version.org.mockito.mocktio-all>1.10.19</version.org.mockito.mocktio-all>
 
@@ -81,7 +84,6 @@
         <jacoco.reportFolder>${project.build.directory}/jacoco/${artifactId}</jacoco.reportFolder>
         <jacoco.utReportFile>${jacoco.reportFolder}/test.exec</jacoco.utReportFile>
     </properties>
-
 
     <dependencyManagement>
         <dependencies>
@@ -138,6 +140,13 @@
         <dependency>
             <groupId>io.micronaut</groupId>
             <artifactId>micronaut-jackson-databind</artifactId>
+        </dependency>
+
+        <!-- dcql -->
+        <dependency>
+            <groupId>io.github.wistefan</groupId>
+            <artifactId>dcql-java</artifactId>
+            <version>${version.io.github.wistefan.dcql-java}</version>
         </dependency>
 
         <!-- required for config micronaut > 4.x -->
@@ -262,7 +271,7 @@
                 <version>${version.org.openapitools.generator-maven-plugin}</version>
                 <executions>
                     <execution>
-                        <id>til</id>
+                        <id>ccs</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
@@ -272,7 +281,7 @@
                             <apiPackage>org.fiware.iam.ccs.api</apiPackage>
                             <strictSpec>true</strictSpec>
                             <modelPackage>org.fiware.iam.ccs.model</modelPackage>
-                            <generateAliasAsModel>true</generateAliasAsModel>
+                            <generateAliasAsModel>false</generateAliasAsModel>
                             <generateModels>true</generateModels>
                             <generateApiTests>true</generateApiTests>
                             <generatorName>micronaut</generatorName>
@@ -286,7 +295,7 @@
                                 <introspected>true</introspected>
                                 <useBeanValidation>false</useBeanValidation>
                                 <supportAsync>false</supportAsync>
-                                <jacksonDatabindNullable>false</jacksonDatabindNullable>
+                                <jacksonDatabindNullable>true</jacksonDatabindNullable>
                                 <generateExamples>true</generateExamples>
                             </configOptions>
                             <typeMappings>

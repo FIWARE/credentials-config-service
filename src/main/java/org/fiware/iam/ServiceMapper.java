@@ -1,12 +1,16 @@
 package org.fiware.iam;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.wistefan.dcql.model.*;
 import org.fiware.iam.ccs.model.*;
 import org.fiware.iam.repository.*;
+import org.fiware.iam.repository.Credential;
 import org.mapstruct.Mapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.fiware.iam.ccs.model.MetaDataQueryVO.*;
 
 /**
  * Responsible for mapping entities from the Service api domain to the internal model.
@@ -22,6 +26,7 @@ public interface ServiceMapper {
 		}
 		Service service = new Service();
 		service.setId(serviceVO.getId());
+		service.setAuthorizationType(map(serviceVO.getAuthorizationType()));
 		service.setDefaultOidcScope(serviceVO.getDefaultOidcScope());
 		service.setOidcScopes(
 				serviceVO.getOidcScopes()
@@ -33,6 +38,7 @@ public interface ServiceMapper {
 							scopeEntry.setCredentials(Optional.ofNullable(e.getValue().getCredentials()).
 									orElse(List.of()).stream().map(this::map).toList());
 							scopeEntry.setPresentationDefinition(this.map(e.getValue().getPresentationDefinition()));
+							scopeEntry.setDcqlQuery(this.map(e.getValue().getDcql()));
 							return scopeEntry;
 						})
 						.toList());
@@ -44,6 +50,7 @@ public interface ServiceMapper {
 			return null;
 		}
 		return new ServiceVO().id(service.getId())
+				.authorizationType(map(service.getAuthorizationType()))
 				.defaultOidcScope(service.getDefaultOidcScope())
 				.oidcScopes(this.toOidcScopes(service.getOidcScopes()));
 	}
@@ -74,12 +81,12 @@ public interface ServiceMapper {
 				.map(this::mapInputDescriptorVO).toList();
 	}
 
-	default Collection<Format> mapFormatVO(FormatVO formatVO) {
-		if (formatVO == null || formatVO.getAdditionalProperties() == null) {
+	default Collection<Format> mapFormatVO(Map<String, Object> formatsMap) {
+		if (formatsMap == null) {
 			return null;
 		}
 
-		return formatVO.getAdditionalProperties()
+		return formatsMap
 				.entrySet()
 				.stream()
 				.map(e -> {
@@ -92,21 +99,27 @@ public interface ServiceMapper {
 				}).toList();
 	}
 
-	default FormatVO mapFormats(Collection<Format> formats) {
+	default Map<String, Object> mapFormats(Collection<Format> formats) {
 		if (formats == null) {
 			return null;
 		}
 
-		FormatVO formatVO = new FormatVO();
-		formats
-				.forEach(f -> {
-					FormatObject formatObject = new FormatObject();
-					formatObject.setAlg(f.getAlg());
-					formatObject.setProofType(f.getProofType());
-					formatVO.setAdditionalProperties(f.getFormatKey(), formatObject);
+		Map<String, Object> formatsMap = new HashMap<>();
+
+		formats.stream()
+				.forEach(format -> {
+					Map<String, Object> formatMap = new HashMap<>();
+					Optional.ofNullable(format.getAlg()).ifPresent(algs -> formatMap.put("alg", algs));
+					Optional.ofNullable(format.getProofType()).ifPresent(pt -> formatMap.put("proof_type", pt));
+					formatsMap.put(format.getFormatKey(), formatMap);
 				});
-		return formatVO;
+
+		return formatsMap;
 	}
+
+	AuthorizationType map(ServiceVO.AuthorizationType authorizationType);
+
+	ServiceVO.AuthorizationType map(AuthorizationType authorizationType);
 
 	InputDescriptorVO mapInputDescriptor(InputDescriptor inputDescriptor);
 
@@ -128,10 +141,109 @@ public interface ServiceMapper {
 					ServiceScopesEntryVO scopesEntryVO = new ServiceScopesEntryVO();
 					scopesEntryVO.setPresentationDefinition(this.map(entry.getPresentationDefinition()));
 					scopesEntryVO.setCredentials(this.map(entry.getCredentials()));
+					scopesEntryVO.setDcql(this.map(entry.getDcqlQuery()));
 					scopes.put(entry.getScopeKey(), scopesEntryVO);
 				});
 		return scopes;
 	}
+
+	DCQLVO map(DcqlQuery dcqlQuery);
+
+	DcqlQuery map(DCQLVO dcqlvo);
+
+	default CredentialQuery map(CredentialQueryVO credentialQueryVO) {
+		if (credentialQueryVO == null) {
+			return null;
+		}
+		CredentialQuery credentialQuery = new CredentialQuery();
+		credentialQuery.setId(credentialQueryVO.getId());
+		credentialQuery.setFormat(this.map(credentialQueryVO.getFormat()));
+		credentialQuery.setMultiple(credentialQueryVO.getMultiple());
+		credentialQuery.setClaims(Optional.ofNullable(credentialQueryVO.getClaims()).orElse(List.of())
+				.stream().map(this::map).toList());
+		credentialQuery.setMeta(this.map(credentialQueryVO.getMeta()));
+		credentialQuery.setRequireCryptographicHolderBinding(credentialQueryVO.getRequireCryptographicHolderBinding());
+		credentialQuery.setClaimSets(credentialQueryVO.getClaimSets());
+		credentialQuery.setTrustedAuthorities(Optional.ofNullable(credentialQueryVO.getTrustedAuthorities()).orElse(List.of())
+				.stream().map(this::map).toList());
+		return credentialQuery;
+	}
+
+	default CredentialQueryVO map(CredentialQuery credentialQuery) {
+		if (credentialQuery == null) {
+			return null;
+		}
+		CredentialQueryVO credentialQueryVO = new CredentialQueryVO();
+		credentialQueryVO.setId(credentialQuery.getId());
+		credentialQueryVO.setFormat(this.map(credentialQuery.getFormat()));
+		credentialQueryVO.setMultiple(credentialQuery.getMultiple());
+		credentialQueryVO.setClaims(Optional.ofNullable(credentialQuery.getClaims()).orElse(List.of())
+				.stream().map(this::map).toList());
+		credentialQueryVO.setMeta(map(credentialQuery.getMeta()));
+		credentialQueryVO.setRequireCryptographicHolderBinding(credentialQuery.getRequireCryptographicHolderBinding());
+		credentialQueryVO.setClaimSets(credentialQuery.getClaimSets());
+		credentialQueryVO.setTrustedAuthorities(Optional.ofNullable(credentialQuery.getTrustedAuthorities()).orElse(List.of())
+				.stream().map(this::map).toList());
+		return credentialQueryVO;
+	}
+
+	TrustedAuthorityQueryVO map(TrustedAuthorityQuery trustedAuthorityQuery);
+
+	TrustedAuthorityQuery map(TrustedAuthorityQueryVO trustedAuthorityQueryVO);
+
+	default TrustedAuthorityType map(String type) {
+		return TrustedAuthorityType.fromValue(type);
+	}
+
+	default String map(TrustedAuthorityType type) {
+		return type.getValue();
+	}
+
+	default Map<String, Object> map(MetaDataQueryVO metaDataQueryVO) {
+		if (metaDataQueryVO == null) {
+			return null;
+		}
+		Map<String, Object> metaMap = new HashMap<>();
+		if (metaDataQueryVO.getVctValues() != null) {
+			metaMap.put(JSON_PROPERTY_VCT_VALUES, metaDataQueryVO.getVctValues());
+		}
+		if (metaDataQueryVO.getTypeValues() != null) {
+			metaMap.put(JSON_PROPERTY_TYPE_VALUES, metaDataQueryVO.getTypeValues());
+		}
+		if (metaDataQueryVO.getDoctypeValue() != null) {
+			metaMap.put(JSON_PROPERTY_DOCTYPE_VALUE, metaDataQueryVO.getDoctypeValue());
+		}
+		return metaMap;
+	}
+
+	default MetaDataQueryVO map(Map<String, Object> meta) {
+		if (meta == null) {
+			return null;
+		}
+		MetaDataQueryVO metaDataQueryVO = new MetaDataQueryVO();
+		if (meta.containsKey(JSON_PROPERTY_VCT_VALUES)) {
+			metaDataQueryVO.setVctValues((List<String>) meta.get(JSON_PROPERTY_VCT_VALUES));
+		}
+		if (meta.containsKey(JSON_PROPERTY_DOCTYPE_VALUE)) {
+			metaDataQueryVO.setDoctypeValue((String) meta.get(JSON_PROPERTY_DOCTYPE_VALUE));
+		}
+		if (meta.containsKey(JSON_PROPERTY_TYPE_VALUES)) {
+			metaDataQueryVO.setTypeValues((List<List<String>>) meta.get(JSON_PROPERTY_TYPE_VALUES));
+		}
+		return metaDataQueryVO;
+	}
+
+	ClaimsQuery map(ClaimsQueryVO claimsQueryVO);
+
+	ClaimsQueryVO map(ClaimsQuery claimsQuery);
+
+	CredentialQueryVO.Format map(CredentialFormat credentialFormat);
+
+	CredentialFormat map(CredentialQueryVO.Format credentialFormat);
+
+	CredentialSetQueryVO map(CredentialSetQuery credentialSetQuery);
+
+	CredentialSetQuery map(CredentialSetQueryVO credentialSetQueryVO);
 
 	default EndpointEntry stringToEndpointEntry(String url) {
 		EndpointEntry entry = new EndpointEntry();
