@@ -55,9 +55,27 @@ The following table concentrates on the most important configuration parameters:
 
 ### Database
 
-Credentials-Config-Service requires an SQL database. It currently supports MySql-compatible DBs and H2 (as an In-Memory DB for dev/test purposes).
+Credentials-Config-Service requires an SQL database. It currently supports MySql-compatible DBs, PostgreSQL and H2 (as an In-Memory DB for dev/test purposes).
 Migrations are applied via [flyway](https://flywaydb.org/), see the [migration-scripts](./src/main/resources/db/migration) for the schema.
 
+By default, the system is configured to use MySQL. To run it with PostgreSQL, you should update the following configuration:
+
+```yaml
+# Update default datasource dialect and driver
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/db
+    driverClassName: org.postgresql.Driver
+    username: superuser
+    password: superpassword
+    dialect: POSTGRES
+# Update migration scripts location
+flyway:
+  datasources:
+    default:
+      locations:
+       - classpath:db/migration/postgresql
+      
 ## Usage
 
 The service provides the following API:
