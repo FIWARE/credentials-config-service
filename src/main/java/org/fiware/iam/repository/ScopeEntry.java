@@ -1,6 +1,7 @@
 package org.fiware.iam.repository;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.github.wistefan.dcql.model.DcqlQuery;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.data.annotation.*;
 import io.micronaut.data.model.DataType;
@@ -34,6 +35,9 @@ public class ScopeEntry {
 
 	@TypeDef(type = DataType.JSON)
 	private PresentationDefinition presentationDefinition;
+
+	@TypeDef(type = DataType.JSON)
+	private DcqlQuery dcqlQuery;
 
 	private boolean flatClaims;
 }

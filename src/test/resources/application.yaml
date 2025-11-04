@@ -30,4 +30,4 @@ flyway:
   datasources:
     default:
       enabled: true
-      locations:  classpath:db/migration/common
+      locations:  classpath:db/migration/common,classpath:db/migration/h2
