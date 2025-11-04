@@ -244,8 +244,8 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				.trustedParticipantsLists(List.of("http://tir.de"));
 		addToScopeEntry(serviceScopesEntryV12, credentialV12);
 		PresentationDefinitionVO presentationDefinitionVO = PresentationDefinitionVOTestExample.build();
-		FormatVO formatVO = new FormatVO();
-		formatVO.setAdditionalProperties("vc+sd-jwt", Map.of("alg", List.of("ES256")));
+		Map<String, Object> formatVO = new HashMap<>();
+		formatVO.put("vc+sd-jwt", Map.of("alg", List.of("ES256")));
 		presentationDefinitionVO.setFormat(formatVO);
 		serviceScopesEntryV12.setPresentationDefinition(presentationDefinitionVO);
 		ServiceVO serviceV12 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV12));
@@ -277,6 +277,16 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		addToScopeEntry(serviceScopesEntryV14, credentialV14);
 		ServiceVO serviceV14 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV14));
 		serviceV14.setDefaultOidcScope("test-oidc-scope");
+
+		// 15 - Service with dcql
+		ServiceScopesEntryVO serviceScopesEntryV15 =
+				ServiceScopesEntryVOTestExample.build();
+		serviceScopesEntryV15.setDcql(DCQLVOTestExample.build());
+		CredentialVO credentialV15 = CredentialVOTestExample.build()
+				.type("my-credential");
+		addToScopeEntry(serviceScopesEntryV15, credentialV15);
+		ServiceVO serviceV15 = ServiceVOTestExample.build().oidcScopes(Map.of("test-oidc-scope", serviceScopesEntryV15));
+		serviceV15.setDefaultOidcScope("test-oidc-scope");
 
 
 		return Stream.of(
@@ -319,8 +329,11 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				// 13 -  Service with jwt mapping
 				Arguments.of(serviceV13,
 						List.of("my-credential")),
-				// 13 -  Service with jwt mapping full inclusion
-				Arguments.of(serviceV13,
+				// 14 -  Service with jwt mapping full inclusion
+				Arguments.of(serviceV14,
+						List.of("my-credential")),
+				// 15 -  Service with jwt mapping full inclusion
+				Arguments.of(serviceV15,
 						List.of("my-credential"))
 		);
 	}
@@ -466,8 +479,8 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 		theService.setId("my-service");
 		assertEquals(HttpStatus.CREATED, testClient.createService(theService).getStatus(),
 				"The service should be initially created.");
-		HttpResponse<ScopeVO> scopeResponse = testClient.getScopeForService("my-service", null);
-		java.util.List<java.lang.String> returnedScope = scopeResponse.body();
+		HttpResponse<List<String>> scopeResponse = testClient.getScopeForService("my-service", null);
+		List<String> returnedScope = scopeResponse.body();
 		assertTrue(returnedScope.size() == expectedScopes.size() && returnedScope.containsAll(
 						expectedScopes) && expectedScopes.containsAll(returnedScope),
 				"All expected scopes should have been returned.");
