@@ -69,12 +69,6 @@ datasources:
     username: superuser
     password: superpassword
     dialect: POSTGRES
-# Update migration scripts location
-flyway:
-  datasources:
-    default:
-      locations:
-       - classpath:db/migration/postgresql
       
 ## Usage
 
