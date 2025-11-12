@@ -35,3 +35,4 @@ flyway:
       enabled: true
       locations:
         - classpath:db/migration/common
+        - classpath:db/migration/${datasources.default.dialect}
