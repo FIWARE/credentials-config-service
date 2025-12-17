@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- ChangeSet to add dcql_query column to scope_entry -->
+    <changeSet id="005-add-dcql-query-to-scope-entry" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="scope_entry" columnName="dcql_query"/>
+            </not>
+        </preConditions>
+        <comment>Add dcql_query column to scope_entry table</comment>
+        <addColumn tableName="scope_entry">
+            <column name="dcql_query" type="text"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- ChangeSet to drop NOT NULL from presentation_definition -->
+    <changeSet id="006-drop-not-null-presentation-definition" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="scope_entry" columnName="presentation_definition"/>
+        </preConditions>
+        <comment>Allow presentation_definition column to be nullable</comment>
+        <dropNotNullConstraint tableName="scope_entry"
+                               columnName="presentation_definition"
+                               columnDataType="text"/>
+    </changeSet>
+
+    <changeSet id="100-tag-db" author="fiware">
+        <tagDatabase tag="v2.0.2"/>
+    </changeSet>
+
+</databaseChangeLog>

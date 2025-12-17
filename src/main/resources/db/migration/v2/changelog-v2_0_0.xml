@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Drop table service if it exists -->
+    <changeSet id="001-drop-service" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="service"/>
+        </preConditions>
+        <comment>Drop table service if exists to recreate it</comment>
+        <dropTable tableName="service" cascadeConstraints="true"/>
+    </changeSet>
+
+    <!-- Create table service -->
+    <changeSet id="002-create-service" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="service"/>
+            </not>
+        </preConditions>
+        <comment>Main table for services</comment>
+        <createTable tableName="service">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="default_oidc_scope" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Create table scope_entry -->
+    <changeSet id="003-create-scope-entry" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="scope_entry"/>
+            </not>
+        </preConditions>
+        <comment>Table for storing scope entries linked to services</comment>
+        <createTable tableName="scope_entry">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="service_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="scope_key" type="varchar(255)"/>
+            <column name="credentials" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="presentation_definition" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Add foreign key to service -->
+        <addForeignKeyConstraint
+                baseTableName="scope_entry"
+                baseColumnNames="service_id"
+                constraintName="fk_scope_service"
+                referencedTableName="service"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+    <changeSet id="100-tag-db" author="fiware">
+        <tagDatabase tag="v2.0.0"/>
+    </changeSet>
+</databaseChangeLog>

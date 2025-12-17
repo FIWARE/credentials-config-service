@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="001-drop-endpoint-entry" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="endpoint_entry"/>
+        </preConditions>
+        <dropTable tableName="endpoint_entry" cascadeConstraints="true"/>
+    </changeSet>
+
+    <changeSet id="002-drop-credential" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="credential"/>
+        </preConditions>
+        <dropTable tableName="credential" cascadeConstraints="true"/>
+    </changeSet>
+
+    <changeSet id="003-drop-service" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="service"/>
+        </preConditions>
+        <dropTable tableName="service" cascadeConstraints="true"/>
+    </changeSet>
+
+    <changeSet id="004-create-service" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="service"/>
+            </not>
+        </preConditions>
+        <createTable tableName="service">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="default_oidc_scope" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="oidc_scopes" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="100-tag-db" author="fiware">
+        <tagDatabase tag="v1.0.2"/>
+    </changeSet>
+</databaseChangeLog>
