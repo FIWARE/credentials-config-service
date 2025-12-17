@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="004-add-flat-claims-to-scope-entry" author="fiware">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="scope_entry" columnName="flat_claims"/>
+            </not>
+        </preConditions>
+        <comment>Add flat_claims column to scope_entry table, default false</comment>
+        <addColumn tableName="scope_entry">
+            <column name="flat_claims" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="100-tag-db" author="fiware">
+        <tagDatabase tag="v2.0.1"/>
+    </changeSet>
+</databaseChangeLog>

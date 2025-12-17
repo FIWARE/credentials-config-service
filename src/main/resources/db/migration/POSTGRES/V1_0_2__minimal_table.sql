@@ -1,9 +1,0 @@
-DROP TABLE IF EXISTS endpoint_entry CASCADE;
-DROP TABLE IF EXISTS credential CASCADE;
-DROP TABLE IF EXISTS service CASCADE;
-
-CREATE TABLE IF NOT EXISTS service (
-    id VARCHAR(255) PRIMARY KEY,
-    default_oidc_scope VARCHAR(255) NOT NULL,
-    oidc_scopes TEXT NOT NULL
-);
