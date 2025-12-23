@@ -9,8 +9,8 @@ on:
       - labeled
       - unlabeled
 env:
-  REGISTRY: quay.io
-  REPOSITORY: fiware
+  REGISTRY: ${{ vars.REGISTRY || 'quay.io' }}
+  REPOSITORY: ${{ vars.REPOSITORY || 'fiware' }}
 
 jobs:
 
@@ -31,7 +31,7 @@ jobs:
       - uses: zwaldowski/semver-release-action@v2
         with:
           dry_run: true
-          bump: ${{ steps.bump.outputs.match }}
+          bump: ${{ steps.bump.outputs.match || 'patch'}}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get PR Number
@@ -64,7 +64,7 @@ jobs:
           mvn clean install deploy -DskipITs -DskipTests -Poci -Dimage.tag=${{ needs.generate-version.outputs.version }} -Dimage.registry="${{ env.REGISTRY }}" -Dimage.repository="${{ env.REPOSITORY }}"
 
   git-release:
-    needs: ["generate-version","build-and-push"]
+    needs: [ "generate-version","build-and-push" ]
     runs-on: ubuntu-latest
 
     steps:
