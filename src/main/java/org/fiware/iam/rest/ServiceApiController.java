@@ -15,6 +15,7 @@ import org.fiware.iam.ccs.api.ServiceApi;
 import org.fiware.iam.ccs.model.*;
 import org.fiware.iam.exception.ConflictException;
 import org.fiware.iam.repository.ScopeEntry;
+import org.fiware.iam.repository.ScopeEntryRepository;
 import org.fiware.iam.repository.Service;
 import org.fiware.iam.repository.ServiceRepository;
 
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 public class ServiceApiController implements ServiceApi {
 
 	private final ServiceRepository serviceRepository;
+    private final ScopeEntryRepository scopeEntryRepository;
 	private final ServiceMapper serviceMapper;
 
 	@Override
@@ -54,14 +56,20 @@ public class ServiceApiController implements ServiceApi {
 								"{id}", savedService.getId())));
 	}
 
-	@Override
-	public HttpResponse<Object> deleteServiceById(@NonNull String id) {
-		if (!serviceRepository.existsById(id)) {
-			return HttpResponse.notFound();
-		}
-		serviceRepository.deleteById(id);
-		return HttpResponse.noContent();
-	}
+    @Transactional
+    @Override
+    public HttpResponse<Object> deleteServiceById(@NonNull String id) {
+        Optional<Service> service = serviceRepository.findById(id);
+
+        if (service.isEmpty()) {
+            return HttpResponse.notFound();
+        }
+
+        scopeEntryRepository.deleteByService(service.get());
+        serviceRepository.deleteById(id);
+
+        return HttpResponse.noContent();
+    }
 
 	@Override
 	public HttpResponse<List<String>> getScopeForService(@NonNull String id, @Nullable String oidcScope) {
@@ -113,39 +121,31 @@ public class ServiceApiController implements ServiceApi {
 						.services(requestedPage.getContent().stream().map(serviceMapper::map).toList()));
 	}
 
-	@Transactional
-	@Override
-	public HttpResponse<ServiceVO> updateService(@NonNull String id, @NonNull ServiceVO serviceVO) {
-		if (serviceVO.getId() != null && !id.equals(serviceVO.getId())) {
-			throw new IllegalArgumentException("The id of a service cannot be updated.");
-		}
-		validateServiceVO(serviceVO);
-		Optional<Service> optionalOrginalService = serviceRepository.findById(id);
-		if (optionalOrginalService.isEmpty()) {
-			return HttpResponse.notFound();
-		}
+@Transactional
+    @Override
+    public HttpResponse<ServiceVO> updateService(@NonNull String id, @NonNull ServiceVO serviceVO) {
+        if (serviceVO.getId() != null && !id.equals(serviceVO.getId())) {
+            throw new IllegalArgumentException("The id of a service cannot be updated.");
+        }
+        validateServiceVO(serviceVO);
 
-		Service originalService = optionalOrginalService.get();
-		Service toBeUpdated = serviceMapper.map(serviceVO);
-		Map<String, ScopeEntry> scopeEntryMap = originalService.getOidcScopes()
-				.stream().collect(Collectors.toMap(ScopeEntry::getScopeKey, sE -> sE));
+        Optional<Service> optionalOriginalService = serviceRepository.findById(id);
+        if (optionalOriginalService.isEmpty()) {
+            return HttpResponse.notFound();
+        }
 
-		List<ScopeEntry> scopeEntries = toBeUpdated.getOidcScopes().stream()
-				.map(scopeEntry -> {
-					if (scopeEntryMap.containsKey(scopeEntry.getScopeKey())) {
-						Long originalId = scopeEntryMap.get(scopeEntry.getScopeKey()).getId();
-						scopeEntry.setId(originalId);
-					}
-					return scopeEntry;
-				}).toList();
+        Service originalService = optionalOriginalService.get();
 
-		// just in case none is set in the object
-		toBeUpdated.setId(id);
-		toBeUpdated.setOidcScopes(scopeEntries);
+        // Delete all existing scope entries for this service to avoid duplicates/orphans
+        // This is necessary because Micronaut Data JDBC doesn't automatically handle orphan removal in updates
+        scopeEntryRepository.deleteByService(originalService);
 
-		Service updatedService = serviceRepository.update(toBeUpdated);
-		return HttpResponse.ok(serviceMapper.map(updatedService));
-	}
+        Service toBeUpdated = serviceMapper.map(serviceVO);
+        toBeUpdated.setId(id);
+        Service updatedService = serviceRepository.update(toBeUpdated);
+        
+        return HttpResponse.ok(serviceMapper.map(updatedService));
+    }
 
 	// validate a service vo, e.g. check forbidden null values
 	private void validateServiceVO(ServiceVO serviceVO) {

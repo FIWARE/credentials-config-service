@@ -35,6 +35,7 @@ public interface ServiceMapper {
 						.map(e -> {
 							ScopeEntry scopeEntry = new ScopeEntry();
 							scopeEntry.setScopeKey(e.getKey());
+							scopeEntry.setService(service);
 							scopeEntry.setCredentials(Optional.ofNullable(e.getValue().getCredentials()).
 									orElse(List.of()).stream().map(this::map).toList());
 							scopeEntry.setPresentationDefinition(this.map(e.getValue().getPresentationDefinition()));
