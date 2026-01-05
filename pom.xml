@@ -73,7 +73,7 @@
         <version.io.github.wistefan.dcql-java>0.0.1</version.io.github.wistefan.dcql-java>
 
         <!-- test -->
-        <version.org.mockito.mocktio-all>1.10.19</version.org.mockito.mocktio-all>
+        <version.org.mockito.mockito-core>5.21.0</version.org.mockito.mockito-core>
 
         <!-- build -->
         <version.org.codehaus.mojo.build-helper-maven-plugin>3.4.0</version.org.codehaus.mojo.build-helper-maven-plugin>
@@ -231,8 +231,8 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>${version.org.mockito.mocktio-all}</version>
+            <artifactId>mockito-core</artifactId>
+            <version>${version.org.mockito.mockito-core}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
