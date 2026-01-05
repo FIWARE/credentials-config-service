@@ -66,8 +66,8 @@
         <version.io.kokuwa.micronaut.logging>3.1.0</version.io.kokuwa.micronaut.logging>
 
         <!-- code gen -->
-        <version.org.openapitools.generator-maven-plugin>6.6.0</version.org.openapitools.generator-maven-plugin>
-        <version.io.kokuwa.micronaut.codegen>3.4.6</version.io.kokuwa.micronaut.codegen>
+        <version.org.openapitools.generator-maven-plugin>7.17.0</version.org.openapitools.generator-maven-plugin>
+        <version.io.kokuwa.micronaut.codegen>4.5.0</version.io.kokuwa.micronaut.codegen>
 
         <!-- dcql -->
         <version.io.github.wistefan.dcql-java>0.0.1</version.io.github.wistefan.dcql-java>
@@ -282,6 +282,7 @@
                                 <supportAsync>false</supportAsync>
                                 <jacksonDatabindNullable>true</jacksonDatabindNullable>
                                 <generateExamples>true</generateExamples>
+                                <serdeable>false</serdeable>
                             </configOptions>
                             <typeMappings>
                                 <typeMapping>java.util.Date=java.time.Instant</typeMapping>
