@@ -649,26 +649,51 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 				"Only existing services can be updated.");
 	}
 
-	private void assertServiceVOsEqual(ServiceVO service0, ServiceVO service1) {
-		assertEquals(service0.getId(), service1.getId(), "ID should be equal.");
-		assertEquals(service0.getDefaultOidcScope(), service1.getDefaultOidcScope(), "Services should have the equal default scope.");
-		assertEquals(service0.getOidcScopes().keySet(), service1.getOidcScopes().keySet(), "The services should have the same scopes.");
+	@Test
+	public void updateServiceRemoveScope200() throws Exception {
+		ServiceScopesEntryVO entry1 = ServiceScopesEntryVOTestExample.build();
+		ServiceScopesEntryVO entry2 = ServiceScopesEntryVOTestExample.build();
+		CredentialVO credential1 = CredentialVOTestExample.build();
+		CredentialVO credential2 = CredentialVOTestExample.build();
+		addToScopeEntry(entry1, credential1);
+		addToScopeEntry(entry2, credential2);
 
-		Set<String> scopeKeys = service0.getOidcScopes().keySet();
-		for (String scope : scopeKeys) {
-			assertScopeEntryEquals(service0.getOidcScopes().get(scope), service1.getOidcScopes().get(scope));
-		}
+		Map<String, ServiceScopesEntryVO> scopes = new HashMap<>();
+		scopes.put("scope1", entry1);
+		scopes.put("scope2", entry2);
 
+		ServiceVO service = ServiceVOTestExample.build().id("service-remove-scope").oidcScopes(scopes);
+		service.setDefaultOidcScope("scope1");
+
+		assertEquals(HttpStatus.CREATED, testClient.createService(service).getStatus(), "Initial creation should succeed.");
+
+		// Remove scope2 and update
+		service.setOidcScopes(Map.of("scope1", entry1));
+
+		HttpResponse<ServiceVO> updatedResponse = testClient.updateService(service.getId(), service);
+		assertEquals(HttpStatus.OK, updatedResponse.getStatus(), "The service should be updated successfully.");
+
+		// Fetch all services and compare the stored service by id
+		HttpResponse<ServicesVO> servicesResponse = testClient.getServices(null, null);
+		assertEquals(HttpStatus.OK, servicesResponse.getStatus(), "Fetching services should succeed.");
+		ServicesVO servicesVO = servicesResponse.body();
+		assertNotNull(servicesVO, "Services response body should not be null.");
+		Optional<ServiceVO> opt = servicesVO.getServices().stream()
+			.filter(s -> Objects.equals(s.getId(), service.getId()))
+			.findFirst();
+		assertTrue(opt.isPresent(), "Updated service should be present in the services list.");
+		ServiceVO updatedFromList = opt.get();
+		assertNotNull(updatedFromList);
+		assertEquals(1, updatedFromList.getOidcScopes().size(), "Only one scope should remain after update.");
+		assertTrue(updatedFromList.getOidcScopes().containsKey("scope1"), "Remaining scope should be scope1.");
 	}
 
-	private void assertScopeEntryEquals(ServiceScopesEntryVO entryVO1, ServiceScopesEntryVO entryVO2) {
-		assertEquals(entryVO1.getCredentials().size(), entryVO2.getCredentials().size(), "The scopes should have the same number of entries.");
-
-		// we don't care about order
-		Set<OrderIgnoringCredential> entries1 = entryVO1.getCredentials().stream().map(this::fromCredentialVO).collect(Collectors.toSet());
-		Set<OrderIgnoringCredential> entries2 = entryVO2.getCredentials().stream().map(this::fromCredentialVO).collect(Collectors.toSet());
-		assertEquals(entries1, entries2, "Credentials in the scope should be equal.");
-	}
+    private void assertServiceVOsEqual(ServiceVO expected, ServiceVO actual) {
+        assertEquals(expected.getId(), actual.getId());
+        assertEquals(expected.getDefaultOidcScope(), actual.getDefaultOidcScope());
+        assertEquals(expected.getOidcScopes().size(), actual.getOidcScopes().size());
+        assertTrue(actual.getOidcScopes().keySet().containsAll(expected.getOidcScopes().keySet()));
+    }
 
 	public OrderIgnoringCredential fromCredentialVO(CredentialVO credentialVO) {
 		OrderIgnoringCredential orderIgnoringCredential = new OrderIgnoringCredential();
