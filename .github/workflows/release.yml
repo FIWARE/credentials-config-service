@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  REGISTRY: quay.io
-  REPOSITORY: fiware
+  REGISTRY: ${{ vars.REGISTRY || 'quay.io' }}
+  REPOSITORY: ${{ vars.REPOSITORY || 'fiware' }}
 
 jobs:
   generate-version:
@@ -24,11 +24,18 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: zwaldowski/semver-release-action@v2
+      - name: Run semver release
+        if: ${{ steps.pr.outputs.labels != '' }}
+        uses: zwaldowski/semver-release-action@v2
         with:
           dry_run: true
           bump: ${{ steps.pr.outputs.labels }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set latest version
+        if: ${{ steps.pr.outputs.labels == '' }}
+        run: |
+          echo "VERSION=latest" >> $GITHUB_ENV
 
       - name: Set version output
         id: out
@@ -56,7 +63,7 @@ jobs:
           mvn clean install deploy -Poci -DskipTests -DskipITs -Dimage.tag=${{ needs.generate-version.outputs.version }} -Dimage.registry="${{ env.REGISTRY }}" -Dimage.repository="${{ env.REPOSITORY }}"
 
   git-release:
-    needs: ["generate-version", "build-and-push"]
+    needs: [ "generate-version", "build-and-push" ]
     runs-on: ubuntu-latest
 
     steps:
@@ -64,6 +71,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - uses: "marvinpinto/action-automatic-releases@latest"
+        if: needs.generate-version.outputs.version != 'latest'
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ needs.generate-version.outputs.version }}

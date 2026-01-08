@@ -1,1 +1,0 @@
-ALTER TABLE `scope_entry` ADD `flat_claims` BOOLEAN NOT NULL;
