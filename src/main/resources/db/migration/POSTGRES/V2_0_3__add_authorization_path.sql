@@ -1,0 +1,1 @@
+ALTER TABLE "service" ADD COLUMN "authorization_type" VARCHAR(255);
