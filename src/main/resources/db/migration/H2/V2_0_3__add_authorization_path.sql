@@ -1,1 +1,0 @@
-ALTER TABLE `service` ADD `authorization_type` varchar(255);
