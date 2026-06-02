@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.micronaut.platform</groupId>
         <artifactId>micronaut-parent</artifactId>
-        <version>4.8.2</version>
+        <version>4.10.6</version>
     </parent>
 
     <groupId>org.fiware.iam</groupId>
@@ -32,8 +32,7 @@
     <properties>
         <jdk.version>21</jdk.version>
         <release.version>21</release.version>
-        <micronaut.version>4.8.2</micronaut.version>
-        <micronaut.data.version>4.12.0</micronaut.data.version>
+        <micronaut.version>${project.parent.version}</micronaut.version>
 
         <!-- project info -->
         <project.author.name>Stefan Wiedemann</project.author.name>
@@ -60,42 +59,31 @@
         <image.repository>fiware</image.repository>
 
         <!-- lazy dev -->
-        <version.org.mapstruct>1.5.3.Final</version.org.mapstruct>
-        <version.org.projectlombok>1.18.36</version.org.projectlombok>
+        <version.org.mapstruct>1.6.3</version.org.mapstruct>
+        <version.org.projectlombok>1.18.42</version.org.projectlombok>
 
         <!-- logging -->
         <version.io.kokuwa.micronaut.logging>3.1.0</version.io.kokuwa.micronaut.logging>
 
         <!-- code gen -->
-        <version.org.openapitools.generator-maven-plugin>6.6.0</version.org.openapitools.generator-maven-plugin>
-        <version.io.kokuwa.micronaut.codegen>3.4.6</version.io.kokuwa.micronaut.codegen>
+        <version.org.openapitools.generator-maven-plugin>7.17.0</version.org.openapitools.generator-maven-plugin>
+        <version.io.kokuwa.micronaut.codegen>4.5.0</version.io.kokuwa.micronaut.codegen>
 
         <!-- dcql -->
         <version.io.github.wistefan.dcql-java>0.0.1</version.io.github.wistefan.dcql-java>
 
         <!-- test -->
-        <version.org.mockito.mocktio-all>1.10.19</version.org.mockito.mocktio-all>
+        <version.org.mockito.mockito-core>5.21.0</version.org.mockito.mockito-core>
 
         <!-- build -->
-        <version.org.codehaus.mojo.build-helper-maven-plugin>3.4.0</version.org.codehaus.mojo.build-helper-maven-plugin>
-        <version.org.jacoco.maven-plugin>0.8.12</version.org.jacoco.maven-plugin>
-        <version.org.eluder.coveralls.maven-plugin>4.3.0</version.org.eluder.coveralls.maven-plugin>
+        <version.org.codehaus.mojo.build-helper-maven-plugin>3.6.1</version.org.codehaus.mojo.build-helper-maven-plugin>
+        <version.org.jacoco.maven-plugin>0.8.14</version.org.jacoco.maven-plugin>
+        <coveralls.maven-plugin>5.0.0</coveralls.maven-plugin>
         <coveralls.token>myToken</coveralls.token>
-        <jacoco.reportFolder>${project.build.directory}/jacoco/${artifactId}</jacoco.reportFolder>
+        <jacoco.reportFolder>${project.build.directory}/jacoco/${project.artifactId}</jacoco.reportFolder>
         <jacoco.utReportFile>${jacoco.reportFolder}/test.exec</jacoco.utReportFile>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.micronaut.data</groupId>
-                <artifactId>micronaut-data-bom</artifactId>
-                <version>${micronaut.data.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
 
         <!-- lazy dev -->
@@ -107,9 +95,7 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>
-                ${version.org.mapstruct}
-            </version>
+            <version>${version.org.mapstruct}</version>
         </dependency>
 
         <!-- micronaut -->
@@ -175,7 +161,7 @@
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
-            <version>3.1.0</version>
+            <version>3.2.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -188,8 +174,8 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -245,8 +231,8 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>${version.org.mockito.mocktio-all}</version>
+            <artifactId>mockito-core</artifactId>
+            <version>${version.org.mockito.mockito-core}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -296,6 +282,7 @@
                                 <supportAsync>false</supportAsync>
                                 <jacksonDatabindNullable>true</jacksonDatabindNullable>
                                 <generateExamples>true</generateExamples>
+                                <serdeable>false</serdeable>
                             </configOptions>
                             <typeMappings>
                                 <typeMapping>java.util.Date=java.time.Instant</typeMapping>
@@ -404,20 +391,12 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.eluder.coveralls</groupId>
+                <groupId>com.github.hazendaz.maven</groupId>
                 <artifactId>coveralls-maven-plugin</artifactId>
-                <version>${version.org.eluder.coveralls.maven-plugin}</version>
+                <version>${coveralls.maven-plugin}</version>
                 <configuration>
                     <repoToken>${coveralls.token}</repoToken>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>javax.xml.bind</groupId>
-                        <artifactId>jaxb-api</artifactId>
-                        <version>2.3.1</version>
-                    </dependency>
-                </dependencies>
-
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -459,7 +438,7 @@
                         <path>
                             <groupId>io.micronaut.validation</groupId>
                             <artifactId>micronaut-validation</artifactId>
-                            <version>4.8.0</version>
+                            <version>${micronaut.validation.version}</version>
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
@@ -510,7 +489,7 @@
                                 <path>
                                     <groupId>io.micronaut.validation</groupId>
                                     <artifactId>micronaut-validation</artifactId>
-                                    <version>4.8.0</version>
+                                    <version>${micronaut.validation.version}</version>
                                 </path>
                             </annotationProcessorPaths>
                             <compilerArgs>

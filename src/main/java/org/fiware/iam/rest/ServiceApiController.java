@@ -37,9 +37,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ServiceApiController implements ServiceApi {
 
+    private static final String PATH_GET_SERVICE = "/service/{id}";
     private final ServiceRepository serviceRepository;
     private final ScopeEntryRepository scopeEntryRepository;
     private final ServiceMapper serviceMapper;
+
 
     @Override
     public HttpResponse<Object> createService(@NonNull ServiceVO serviceVO) {
@@ -54,9 +56,7 @@ public class ServiceApiController implements ServiceApi {
         Service savedService = serviceRepository.save(mappedService);
 
         return HttpResponse.created(
-                URI.create(
-                        ServiceApi.PATH_GET_SERVICE.replace(
-                                "{id}", savedService.getId())));
+                URI.create(PATH_GET_SERVICE.replace("{id}", savedService.getId())));
     }
 
     @Transactional
@@ -70,7 +70,6 @@ public class ServiceApiController implements ServiceApi {
 
         scopeEntryRepository.deleteByService(service.get());
         serviceRepository.deleteById(id);
-
         return HttpResponse.noContent();
     }
 
@@ -105,8 +104,8 @@ public class ServiceApiController implements ServiceApi {
     @Override
     public HttpResponse<ServicesVO> getServices(@Nullable Integer nullablePageSize,
                                                 @Nullable Integer nullablePage) {
-        var pageSize = Optional.ofNullable(nullablePageSize).orElse(100);
-        var page = Optional.ofNullable(nullablePage).orElse(0);
+        int pageSize = Optional.ofNullable(nullablePageSize).orElse(100);
+        int page = Optional.ofNullable(nullablePage).orElse(0);
         if (pageSize < 1) {
             throw new IllegalArgumentException("PageSize has to be at least 1.");
         }
