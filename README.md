@@ -163,6 +163,10 @@ The verifier can access that information via:
 curl --location 'localhost:8080/service/packet-delivery-service'
 ```
 
+Services may also include an optional `allowedRedirectUris` array. The config service stores and returns these values
+unchanged so that VCVerifier can restrict the destinations for authorization codes. If omitted or empty, no redirect
+URI restriction is configured by this field.
+
 #### Support for Gaia-X registries
 
 The config service also supports GAIA-X Registries as participants list(even mixed configurations):

@@ -246,13 +246,37 @@ class ServiceMapperTest {
 	@ParameterizedTest
 	@MethodSource("serviceAndVo")
 	public void testServiceVoToService(ServiceVO serviceVO, Service expectedService) {
+		expectedService.setAllowedRedirectUrisJson(
+				serviceMapper.serializeAllowedRedirectUris(serviceVO.getAllowedRedirectUris()));
 		assertEquals(expectedService, serviceMapper.map(serviceVO));
 	}
 
 	@ParameterizedTest
 	@MethodSource("serviceAndVo")
 	public void testServiceToServiceVO(ServiceVO expectedServiceVO, Service service) {
+		service.setAllowedRedirectUrisJson(
+				serviceMapper.serializeAllowedRedirectUris(expectedServiceVO.getAllowedRedirectUris()));
 		assertEquals(expectedServiceVO, serviceMapper.map(service));
+	}
+
+	@Test
+	public void testAllowedRedirectUrisRoundTrip() {
+		List<String> allowedRedirectUris = List.of("https://rp.example/callback", "https://rp.example/tenants/*");
+		String json = serviceMapper.serializeAllowedRedirectUris(allowedRedirectUris);
+		assertEquals(allowedRedirectUris, serviceMapper.deserializeAllowedRedirectUris(json));
+	}
+
+	@Test
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public void testSerializeAllowedRedirectUrisFails() {
+		// an empty bean cannot be serialized by jackson's default configuration
+		List invalidList = List.of(new Object());
+		assertThrows(IllegalArgumentException.class, () -> serviceMapper.serializeAllowedRedirectUris(invalidList));
+	}
+
+	@Test
+	public void testDeserializeAllowedRedirectUrisFails() {
+		assertThrows(IllegalStateException.class, () -> serviceMapper.deserializeAllowedRedirectUris("not-json"));
 	}
 
 	public static Stream<Arguments> serviceAndVo() {

@@ -3,6 +3,7 @@ package org.fiware.iam.repository;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;
+import io.micronaut.data.annotation.MappedProperty;
 import io.micronaut.data.annotation.Relation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,6 +29,9 @@ public class Service {
 	private String defaultOidcScope;
 
 	private AuthorizationType authorizationType;
+
+	@MappedProperty("allowed_redirect_uris")
+	private String allowedRedirectUrisJson;
 
 	@Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "service", cascade = Relation.Cascade.ALL)
 	private Collection<ScopeEntry> oidcScopes;
