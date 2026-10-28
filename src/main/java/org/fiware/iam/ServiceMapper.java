@@ -1,5 +1,7 @@
 package org.fiware.iam;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.wistefan.dcql.model.ClaimsQuery;
 import io.github.wistefan.dcql.model.CredentialFormat;
@@ -63,6 +65,7 @@ public interface ServiceMapper {
         service.setId(serviceVO.getId());
         service.setAuthorizationType(map(serviceVO.getAuthorizationType()));
         service.setDefaultOidcScope(serviceVO.getDefaultOidcScope());
+        service.setAllowedRedirectUrisJson(serializeAllowedRedirectUris(serviceVO.getAllowedRedirectUris()));
         service.setOidcScopes(
                 serviceVO.getOidcScopes()
                         .entrySet()
@@ -87,7 +90,30 @@ public interface ServiceMapper {
         return new ServiceVO().id(service.getId())
                 .authorizationType(map(service.getAuthorizationType()))
                 .defaultOidcScope(service.getDefaultOidcScope())
+                .allowedRedirectUris(deserializeAllowedRedirectUris(service.getAllowedRedirectUrisJson()))
                 .oidcScopes(this.toOidcScopes(service.getOidcScopes()));
+    }
+
+    default String serializeAllowedRedirectUris(List<String> allowedRedirectUris) {
+        if (allowedRedirectUris == null) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.writeValueAsString(allowedRedirectUris);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Unable to serialize allowed redirect URIs.", e);
+        }
+    }
+
+    default List<String> deserializeAllowedRedirectUris(String allowedRedirectUrisJson) {
+        if (allowedRedirectUrisJson == null) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.readValue(allowedRedirectUrisJson, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Unable to deserialize stored allowed redirect URIs.", e);
+        }
     }
 
     default PresentationDefinition map(PresentationDefinitionVO presentationDefinitionVO) {

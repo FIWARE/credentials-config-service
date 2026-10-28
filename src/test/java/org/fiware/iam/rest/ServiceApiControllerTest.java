@@ -519,6 +519,26 @@ public class ServiceApiControllerTest implements ServiceApiTestSpec {
 	}
 
 	@Test
+	public void allowedRedirectUrisArePersistedAndReturned() {
+		List<String> allowedRedirectUris = List.of(
+				"https://rp.example/callback",
+				"https://rp.example/tenants/*");
+		ServiceVO service = getEmptyService()
+				.id("redirect-uri-service")
+				.allowedRedirectUris(allowedRedirectUris);
+
+		assertEquals(HttpStatus.CREATED, testClient.createService(service).getStatus());
+
+		HttpResponse<ServiceVO> response = testClient.getService(service.getId());
+		assertEquals(HttpStatus.OK, response.getStatus());
+		assertEquals(allowedRedirectUris, response.body().getAllowedRedirectUris());
+
+		HttpResponse<ServicesVO> servicesResponse = testClient.getServices(null, null);
+		assertEquals(allowedRedirectUris,
+				servicesResponse.body().getServices().get(0).getAllowedRedirectUris());
+	}
+
+	@Test
 	@Override
 	public void getService404() throws Exception {
 		assertEquals(HttpStatus.NOT_FOUND, testClient.getService("my-service").status(),
